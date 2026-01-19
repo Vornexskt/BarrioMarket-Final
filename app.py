@@ -81,7 +81,7 @@ def pagina_principal():
     conn = get_db_connection(); cursor = conn.cursor()
     cursor.execute("SELECT * FROM comercios WHERE estado = 'activo'")
     lista_comercios = cursor.fetchall()
-    cursor.execute("SELECT * FROM comercios WHERE estado = 'activo' AND es_destacado = 1")
+    cursor.execute("SELECT * FROM comercios WHERE estado = 'activo' AND es_destacado = true")
     lista_destacados = cursor.fetchall()
     conn.close()
     return render_template('index.html', comercios=lista_comercios, destacados=lista_destacados)
@@ -89,7 +89,7 @@ def pagina_principal():
 @app.route('/comercio/<int:id_comercio>')
 def ver_comercio(id_comercio):
     conn = get_db_connection(); cursor = conn.cursor()
-    cursor.execute("SELECT * FROM comercios WHERE id = ?", (id_comercio,))
+    cursor.execute("SELECT * FROM comercios WHERE id = %s", (id_comercio,))
     comercio = cursor.fetchone()
     
     if not comercio: return "Negocio no encontrado", 404
@@ -99,10 +99,10 @@ def ver_comercio(id_comercio):
         if session.get('rol') not in ['admin', 'dueno']:
             return render_template('login.html', error="⛔ Este negocio se encuentra pausado temporalmente.")
 
-    cursor.execute("SELECT * FROM productos WHERE comercio_id = ?", (id_comercio,))
+    cursor.execute("SELECT * FROM productos WHERE comercio_id = %s", (id_comercio,))
     productos = cursor.fetchall()
     
-    cursor.execute("SELECT * FROM resenas WHERE comercio_id = ? ORDER BY id DESC", (id_comercio,))
+    cursor.execute("SELECT * FROM resenas WHERE comercio_id = %s ORDER BY id DESC", (id_comercio,))
     resenas = cursor.fetchall()
     
     promedio = 0
@@ -135,7 +135,7 @@ def login():
         # Buscamos el usuario PRIMERO, sin chequear contraseña en la SQL
         cursor.execute("""
             SELECT * FROM comercios 
-            WHERE (usuario = ? OR email = ? OR telefono = ?)
+            WHERE (usuario = %s OR email = %s OR telefono = %s)
         """, (login_input, login_input, login_input))
         
         comercio = cursor.fetchone()
@@ -183,7 +183,7 @@ def google_callback():
         email_google = user_info['email']
         
         conn = get_db_connection(); cursor = conn.cursor()
-        cursor.execute("SELECT * FROM comercios WHERE email = ?", (email_google,))
+        cursor.execute("SELECT * FROM comercios WHERE email = %s", (email_google,))
         comercio = cursor.fetchone()
         conn.close()
         
@@ -212,7 +212,7 @@ def registro():
         form = request.form
         conn = get_db_connection(); cursor = conn.cursor()
         
-        cursor.execute("SELECT * FROM comercios WHERE email = ? OR usuario = ?", (form['email'], form['usuario']))
+        cursor.execute("SELECT * FROM comercios WHERE email = %s OR usuario = %s", (form['email'], form['usuario']))
         if cursor.fetchone():
             conn.close()
             return render_template('registro.html', error="⚠️ Usuario o Email ya existen.")
@@ -242,7 +242,7 @@ def registro():
         # GUARDA TAMBIÉN: horarios (vacio al inicio) y estado_abierto (0 por defecto)
         cursor.execute("""
             INSERT INTO comercios (nombre_negocio, usuario, email, password, telefono, direccion, categoria, estado, mapa_url, logo_url, horarios, estado_abierto) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, 'pendiente', ?, ?, ?, 0)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, 'pendiente', %s, %s, %s, false)
         """, (form['nombre'], form['usuario'], form['email'], hashed_password, telefono_final, form['direccion'], form['categoria'], form.get('mapa',''), logo_url, ''))
         
         conn.commit(); conn.close()
@@ -261,14 +261,14 @@ def dashboard_dueno():
     
     conn = get_db_connection(); cursor = conn.cursor()
     
-    cursor.execute("SELECT * FROM productos WHERE comercio_id = ?", (id_comercio,))
+    cursor.execute("SELECT * FROM productos WHERE comercio_id = %s", (id_comercio,))
     productos = cursor.fetchall()
     
-    cursor.execute("SELECT * FROM comercios WHERE id = ?", (id_comercio,))
+    cursor.execute("SELECT * FROM comercios WHERE id = %s", (id_comercio,))
     datos_comercio = cursor.fetchone()
     
     try:
-        cursor.execute("SELECT SUM(total_venta) FROM ventas WHERE comercio_id = ?", (id_comercio,))
+        cursor.execute("SELECT SUM(total_venta) FROM ventas WHERE comercio_id = %s", (id_comercio,))
         resultado_ventas = cursor.fetchone()[0]
         total_vendido = round(resultado_ventas, 2) if resultado_ventas else 0
         
@@ -276,7 +276,7 @@ def dashboard_dueno():
             SELECT v.*, p.nombre_producto 
             FROM ventas v 
             LEFT JOIN productos p ON v.producto_id = p.id 
-            WHERE v.comercio_id = ? 
+            WHERE v.comercio_id = %s 
             ORDER BY v.fecha DESC LIMIT 20
         """, (id_comercio,))
         historial_ventas = cursor.fetchall()
@@ -300,11 +300,11 @@ def cambiar_estado_abierto():
     
     conn = get_db_connection(); cursor = conn.cursor()
     # Invertir el estado actual (NOT)
-    cursor.execute("UPDATE comercios SET estado_abierto = NOT estado_abierto WHERE id = ?", (session['user_id'],))
+    cursor.execute("UPDATE comercios SET estado_abierto = NOT estado_abierto WHERE id = %s", (session['user_id'],))
     conn.commit()
     
     # Obtener nuevo estado para confirmación
-    cursor.execute("SELECT estado_abierto FROM comercios WHERE id = ?", (session['user_id'],))
+    cursor.execute("SELECT estado_abierto FROM comercios WHERE id = %s", (session['user_id'],))
     nuevo_estado = cursor.fetchone()[0]
     conn.close()
     
@@ -333,7 +333,7 @@ def registrar_venta_manual():
             )
         """)
         
-        cursor.execute("SELECT * FROM productos WHERE id = ? AND comercio_id = ?", (id_prod, session['user_id']))
+        cursor.execute("SELECT * FROM productos WHERE id = %s AND comercio_id = %s", (id_prod, session['user_id']))
         producto = cursor.fetchone()
         
         if not producto:
@@ -344,10 +344,10 @@ def registrar_venta_manual():
         
         total = producto['precio'] * cantidad
         
-        cursor.execute("INSERT INTO ventas (comercio_id, producto_id, cantidad, total_venta) VALUES (?, ?, ?, ?)",
+        cursor.execute("INSERT INTO ventas (comercio_id, producto_id, cantidad, total_venta) VALUES (%s, %s, %s, %s)",
                        (session['user_id'], id_prod, cantidad, total))
         
-        cursor.execute("UPDATE productos SET stock = stock - ? WHERE id = ?", (cantidad, id_prod))
+        cursor.execute("UPDATE productos SET stock = stock - %s WHERE id = %s", (cantidad, id_prod))
         
         conn.commit(); conn.close()
         
@@ -376,7 +376,7 @@ def nuevo_producto_web():
         url_foto = f"/static/uploads/{nombre_unico}"
 
     conn = get_db_connection(); cursor = conn.cursor()
-    cursor.execute("INSERT INTO productos (comercio_id, nombre_producto, precio, stock, imagen_url) VALUES (?, ?, ?, ?, ?)",
+    cursor.execute("INSERT INTO productos (comercio_id, nombre_producto, precio, stock, imagen_url) VALUES (%s, %s, %s, %s, %s)",
                    (id_comercio, nombre, precio, stock, url_foto))
     conn.commit(); conn.close()
     
@@ -392,7 +392,7 @@ def editar_producto_web(id_prod):
     stock = request.form['stock']
     
     conn = get_db_connection(); cursor = conn.cursor()
-    cursor.execute("SELECT * FROM productos WHERE id=? AND comercio_id=?", (id_prod, session['user_id']))
+    cursor.execute("SELECT * FROM productos WHERE id=%s AND comercio_id=%s", (id_prod, session['user_id']))
     if not cursor.fetchone(): return "No permitido"
     
     archivo = request.files.get('foto')
@@ -402,9 +402,9 @@ def editar_producto_web(id_prod):
         nombre_unico = f"prod_{session['user_id']}_{random.randint(1000,9999)}_{filename}"
         archivo.save(os.path.join(app.config['UPLOAD_FOLDER'], nombre_unico))
         url_foto = f"/static/uploads/{nombre_unico}"
-        cursor.execute("UPDATE productos SET imagen_url=? WHERE id=?", (url_foto, id_prod))
+        cursor.execute("UPDATE productos SET imagen_url=%s WHERE id=%s", (url_foto, id_prod))
 
-    cursor.execute("UPDATE productos SET nombre_producto=?, precio=?, stock=? WHERE id=?", (nombre, precio, stock, id_prod))
+    cursor.execute("UPDATE productos SET nombre_producto=%s, precio=%s, stock=%s WHERE id=%s", (nombre, precio, stock, id_prod))
     conn.commit(); conn.close()
     
     flash('Producto actualizado.', 'info')
@@ -414,7 +414,7 @@ def editar_producto_web(id_prod):
 def borrar_producto_web(id_prod):
     if session.get('rol') != 'dueno': return redirect(url_for('login'))
     conn = get_db_connection(); cursor = conn.cursor()
-    cursor.execute("DELETE FROM productos WHERE id=? AND comercio_id=?", (id_prod, session['user_id']))
+    cursor.execute("DELETE FROM productos WHERE id=%s AND comercio_id=%s", (id_prod, session['user_id']))
     conn.commit(); conn.close()
     flash('Producto eliminado.', 'warning')
     return redirect(url_for('dashboard_dueno'))
@@ -436,10 +436,10 @@ def editar_perfil_web():
         archivo.save(os.path.join(app.config['UPLOAD_FOLDER'], nombre_unico))
         logo_url = f"/static/uploads/{nombre_unico}"
         
-        cursor.execute("UPDATE comercios SET telefono=?, direccion=?, horarios=?, logo_url=? WHERE id=?", 
+        cursor.execute("UPDATE comercios SET telefono=%s, direccion=%s, horarios=%s, logo_url=%s WHERE id=%s", 
                        (telefono, direccion, horarios, logo_url, session['user_id']))
     else:
-        cursor.execute("UPDATE comercios SET telefono=?, direccion=?, horarios=? WHERE id=?", 
+        cursor.execute("UPDATE comercios SET telefono=%s, direccion=%s, horarios=%s WHERE id=%s", 
                        (telefono, direccion, horarios, session['user_id']))
     
     conn.commit(); conn.close()
@@ -461,7 +461,7 @@ def reporte_mensual():
         SELECT v.*, p.nombre_producto 
         FROM ventas v 
         LEFT JOIN productos p ON v.producto_id = p.id 
-        WHERE v.comercio_id = ? AND strftime('%Y-%m', v.fecha) = ?
+        WHERE v.comercio_id = %s AND strftime('%Y-%m', v.fecha) = %s
         ORDER BY v.fecha DESC
     """, (id_comercio, mes_actual_str))
     
@@ -469,7 +469,7 @@ def reporte_mensual():
     
     total_mes = sum(v['total_venta'] for v in ventas_mes)
     
-    cursor.execute("SELECT * FROM comercios WHERE id = ?", (id_comercio,))
+    cursor.execute("SELECT * FROM comercios WHERE id = %s", (id_comercio,))
     datos_comercio = cursor.fetchone()
     conn.close()
     
@@ -537,7 +537,7 @@ def admin_negocios():
 def aprobar_comercio(id):
     if not session.get('rol') == 'admin': return redirect(url_for('login'))
     conn = get_db_connection(); cursor = conn.cursor()
-    cursor.execute("UPDATE comercios SET estado = 'activo' WHERE id = ?", (id,))
+    cursor.execute("UPDATE comercios SET estado = 'activo' WHERE id = %s", (id,))
     conn.commit(); conn.close()
     return redirect(url_for('admin_panel'))
 
@@ -545,7 +545,7 @@ def aprobar_comercio(id):
 def cambiar_estado_comercio(id, accion):
     if not session.get('rol') == 'admin': return redirect(url_for('login'))
     conn = get_db_connection(); cursor = conn.cursor()
-    cursor.execute("UPDATE comercios SET estado = ? WHERE id = ?", ('activo' if accion == 'activar' else 'suspendido', id))
+    cursor.execute("UPDATE comercios SET estado = %s WHERE id = %s", ('activo' if accion == 'activar' else 'suspendido', id))
     conn.commit(); conn.close()
     return redirect(url_for('admin_negocios', _anchor=f'negocio-{id}'))
 
@@ -553,7 +553,7 @@ def cambiar_estado_comercio(id, accion):
 def toggle_vip(id):
     if not session.get('rol') == 'admin': return redirect(url_for('login'))
     conn = get_db_connection(); cursor = conn.cursor()
-    cursor.execute("UPDATE comercios SET es_destacado = NOT es_destacado WHERE id = ?", (id,))
+    cursor.execute("UPDATE comercios SET es_destacado = NOT es_destacado WHERE id = %s", (id,))
     conn.commit(); conn.close()
     return redirect(url_for('admin_negocios', _anchor=f'negocio-{id}'))
 
@@ -561,7 +561,7 @@ def toggle_vip(id):
 def toggle_verificado(id):
     if not session.get('rol') == 'admin': return redirect(url_for('login'))
     conn = get_db_connection(); cursor = conn.cursor()
-    cursor.execute("UPDATE comercios SET es_verificado = NOT es_verificado WHERE id = ?", (id,))
+    cursor.execute("UPDATE comercios SET es_verificado = NOT es_verificado WHERE id = %s", (id,))
     conn.commit(); conn.close()
     return redirect(url_for('admin_negocios', _anchor=f'negocio-{id}'))
 
@@ -570,12 +570,12 @@ def eliminar_negocio(id):
     if not session.get('rol') == 'admin': return redirect(url_for('login'))
     conn = get_db_connection(); cursor = conn.cursor()
     
-    try: cursor.execute("DELETE FROM ventas WHERE comercio_id = ?", (id,))
+    try: cursor.execute("DELETE FROM ventas WHERE comercio_id = %s", (id,))
     except: pass
     
-    cursor.execute("DELETE FROM productos WHERE comercio_id = ?", (id,))
-    cursor.execute("DELETE FROM resenas WHERE comercio_id = ?", (id,))
-    cursor.execute("DELETE FROM comercios WHERE id = ?", (id,))
+    cursor.execute("DELETE FROM productos WHERE comercio_id = %s", (id,))
+    cursor.execute("DELETE FROM resenas WHERE comercio_id = %s", (id,))
+    cursor.execute("DELETE FROM comercios WHERE id = %s", (id,))
     
     conn.commit(); conn.close()
     flash('Negocio eliminado permanentemente.', 'success')
@@ -596,7 +596,7 @@ def generar_qr(id_comercio):
 @app.route('/comercio/<int:id_comercio>/calificar', methods=['POST'])
 def agregar_resena(id_comercio):
     conn = get_db_connection(); cursor = conn.cursor()
-    cursor.execute("INSERT INTO resenas (comercio_id, puntaje, comentario) VALUES (?, ?, ?)",
+    cursor.execute("INSERT INTO resenas (comercio_id, puntaje, comentario) VALUES (%s, %s, %s)",
                    (id_comercio, request.form['puntaje'], request.form['comentario']))
     conn.commit(); conn.close()
     flash('¡Gracias por tu opinión!', 'success')
