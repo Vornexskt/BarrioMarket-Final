@@ -76,7 +76,7 @@ google = oauth.register(
 #  RUTAS PÚBLICAS (CLIENTES)
 # ==========================================
 # Cambia esto a True para activar el mantenimiento
-MANTENIMIENTO = True
+MANTENIMIENTO = False
 
 @app.before_request
 def check_mantenimiento():
