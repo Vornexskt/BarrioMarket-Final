@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión | Barrio Market</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+
+    <style>
+        body, html { height: 100%; font-family: 'Outfit', sans-serif; background-color: #fff; overflow-x: hidden; }
+        .row-full { min-height: 100vh; margin: 0; }
+
+        /* --- COLUMNA IZQUIERDA --- */
+        .col-image {
+            position: relative;
+            min-height: 400px;
+            overflow: hidden;
+            padding: 0;
+            background-color: #000;
+        }
+
+        /* --- EFECTO KEN BURNS ACELERADO --- */
+        .kb-slide {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover; background-position: center;
+            opacity: 0;
+            transform: scale(1);
+            transition: opacity 0.8s ease-in-out;
+            z-index: 1;
+        }
+
+        .kb-slide.active {
+            opacity: 1;
+            transform: scale(1.10); /* Zoom del 10% */
+            /* Ajustado a 4s para que se note el movimiento en el intervalo corto */
+            transition: opacity 0.8s ease-in-out, transform 4s linear;
+        }
+
+        /* CAPA OSCURA Y POSICIÓN DEL TEXTO */
+        .overlay {
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.2) 100%);
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            justify-content: flex-end; /* Alinea al fondo, pero... */
+            /* ...el padding-bottom grande lo empuja hacia ARRIBA */
+            padding: 0 60px 180px 60px;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        /* TIPOGRAFÍA */
+        .hero-title {
+            font-weight: 900; letter-spacing: -2px; line-height: 1;
+            text-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            font-size: 3.8rem; /* Un poco más grande */
+        }
+
+        .neon-yellow { color: #fbbf24; text-shadow: 0 0 25px rgba(251, 191, 36, 0.6); }
+        .neon-cyan { color: #22d3ee; text-shadow: 0 0 25px rgba(34, 211, 238, 0.6); }
+        .neon-purple { color: #d8b4fe; text-shadow: 0 0 25px rgba(216, 180, 254, 0.6); }
+
+        .hero-text {
+            font-size: 1.4rem; font-weight: 500; opacity: 0.95; max-width: 550px;
+            margin-top: 20px; border-left: 5px solid #fff; padding-left: 20px;
+        }
+
+        /* --- COLUMNA DERECHA --- */
+        .col-form { display: flex; align-items: center; justify-content: center; padding: 40px; background-color: white; z-index: 20; }
+        .login-card { width: 100%; max-width: 450px; }
+        .brand-logo { font-weight: 900; font-size: 2.5rem; color: #0f172a; letter-spacing: -1px; margin-bottom: 10px; display: inline-flex; align-items: center; gap: 15px; }
+
+        .form-control { background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 12px; font-weight: 500; transition: 0.3s; }
+        .form-control:focus { background-color: white; border-color: #0f172a; box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.1); }
+        .btn-dark-pro { background-color: #0f172a; color: white; border: none; padding: 15px; border-radius: 12px; font-weight: 700; width: 100%; transition: 0.3s; }
+        .btn-dark-pro:hover { background-color: #1e293b; transform: translateY(-2px); box-shadow: 0 15px 30px rgba(0,0,0,0.2); }
+        .btn-google { background-color: white; border: 2px solid #e2e8f0; color: #0f172a; padding: 12px; border-radius: 12px; font-weight: 600; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s; text-decoration: none; }
+        .btn-google:hover { background-color: #f8fafc; border-color: #cbd5e1; }
+    </style>
+</head>
+<body>
+
+    <div class="row row-full">
+
+        <div class="col-lg-6 col-image d-none d-lg-block">
+
+            <div class="kb-slide active" style="background-image: url('https://images.unsplash.com/photo-1578916171728-46686eac8d58?q=80&w=1974&auto=format&fit=crop');"></div>
+            <div class="kb-slide" style="background-image: url('https://images.unsplash.com/photo-1556740758-90de374c12ad?q=80&w=2070&auto=format&fit=crop');"></div>
+            <div class="kb-slide" style="background-image: url('https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?q=80&w=2070&auto=format&fit=crop');"></div>
+
+            <div class="overlay">
+                <div id="text-container" class="animate__animated animate__fadeInLeft">
+                    <h1 class="text-white mb-3 hero-title" id="hero-title">
+                        Domina tu <br><span class="neon-yellow">Retail</span>.
+                    </h1>
+                    <p class="text-white hero-text" id="hero-subtitle">
+                        La herramienta definitiva para supermercados, kioscos y almacenes que quieren crecer.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 col-form">
+            <div class="login-card animate__animated animate__fadeInRight">
+                <div class="text-center mb-5">
+                    <div class="brand-logo"><i class="fas fa-store"></i> Barrio Market</div>
+                    <p class="text-muted">Ingresa tus credenciales para continuar</p>
+                </div>
+
+                {% if error %}
+                <div class="alert alert-danger rounded-4 text-center border-0 bg-danger bg-opacity-10 text-danger fw-bold mb-4 animate__animated animate__shakeX">
+                    <i class="fas fa-exclamation-circle me-2"></i> {{ error }}
+                </div>
+                {% endif %}
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} rounded-4 text-center border-0 mb-4 animate__animated animate__fadeInDown">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <form action="/login" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-4">
+                        <label class="small fw-bold text-muted mb-2 ms-1">Usuario / Email</label>
+                        <input type="text" name="login_input" class="form-control" placeholder="ej: tu_negocio" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="small fw-bold text-muted mb-2 ms-1">Contraseña</label>
+                        <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn-dark-pro shadow-lg mb-4">Iniciar Sesión</button>
+                </form>
+
+                <div class="position-relative text-center mb-4">
+                    <hr class="text-muted opacity-25">
+                    <span class="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted small fw-bold">o continúa con</span>
+                </div>
+                <a href="/login/google" class="btn-google mb-4">
+                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" width="20" alt="Google">
+                    Ingresar con Google
+                </a>
+                <div class="text-center">
+                    <p class="text-muted small">¿Nuevo aquí? <a href="/registro" class="text-primary fw-bold text-decoration-none">Crear cuenta gratis</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const texts = [
+            {
+                title: 'Domina tu <br><span class="neon-yellow">Retail</span>.',
+                desc: 'Control total de stock y caja para supermercados y almacenes.'
+            },
+            {
+                title: 'Eleva tu <br><span class="neon-cyan">Finanza</span>.',
+                desc: 'Pagos, cobros y reportes detallados para que no se te escape un centavo.'
+            },
+            {
+                title: 'Potencia tus <br><span class="neon-purple">Servicios</span>.',
+                desc: 'Organización profesional para talleres y comercios de servicios.'
+            }
+        ];
+
+        let currentIndex = 0;
+        const slides = document.querySelectorAll('.kb-slide');
+        const textContainer = document.getElementById('text-container');
+        const titleEl = document.getElementById('hero-title');
+        const descEl = document.getElementById('hero-subtitle');
+
+        function nextSlide() {
+            // Cambio de Imagen
+            slides[currentIndex].classList.remove('active');
+            currentIndex = (currentIndex + 1) % slides.length;
+            slides[currentIndex].classList.add('active');
+
+            // 1. Animación de SALIDA (Se va hacia la derecha)
+            textContainer.classList.remove('animate__fadeInLeft');
+            textContainer.classList.add('animate__fadeOutRight');
+
+            // Esperar un poco menos para que el texto aparezca rápido (0.5s)
+            setTimeout(() => {
+                // Cambiar contenido
+                titleEl.innerHTML = texts[currentIndex].title;
+                descEl.textContent = texts[currentIndex].desc;
+
+                // 2. Animación de ENTRADA (Vuelve a entrar por la izquierda)
+                textContainer.classList.remove('animate__fadeOutRight');
+                textContainer.classList.add('animate__fadeInLeft');
+            }, 500);
+        }
+
+        // Intervalo exacto de 3.3 segundos (3300 ms)
+        setInterval(nextSlide, 3300);
+    </script>
+
+</body>
+</html>

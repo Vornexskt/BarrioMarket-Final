@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subir Foto | {{ nombre }}</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Fondo Animado */
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Tarjeta de Cristal */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            padding: 40px;
+            width: 100%;
+            max-width: 450px; /* Un poco más ancho para que se vea bien */
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        /* Zona de Subida Personalizada */
+        .upload-zone {
+            border: 3px dashed #e2e8f0;
+            border-radius: 20px;
+            padding: 30px 20px;
+            cursor: pointer;
+            transition: 0.3s;
+            background: #f8fafc;
+            color: #64748b;
+            margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: #e73c7e;
+            background: #fff5f8;
+            color: #e73c7e;
+        }
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #e73c7e;
+            opacity: 0.8;
+        }
+        
+        /* Botón con Gradiente */
+        .btn-gradient {
+            background: linear-gradient(135deg, #e73c7e 0%, #a855f7 100%);
+            border: none;
+            border-radius: 50px;
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: white;
+            width: 100%;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .btn-gradient:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(231, 60, 126, 0.4);
+            color: white;
+        }
+
+        /* Otros estilos */
+        .product-badge {
+            background: #e73c7e;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            display: inline-block;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 10px rgba(231, 60, 126, 0.3);
+        }
+        .text-muted-hover:hover {
+            color: #e73c7e !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glass-card">
+        <div class="mb-4">
+            <i class="fas fa-camera-retro fa-3x text-gradient" style="background: -webkit-linear-gradient(45deg, #e73c7e, #23a6d5); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
+        </div>
+        <h3 class="fw-bold mb-2" style="color: #1e293b;">Subir Foto del Producto</h3>
+        <p class="text-muted mb-4">Dale una nueva imagen a tu producto.</p>
+
+        <div class="product-badge">
+            <i class="fas fa-box-open me-2"></i> {{ nombre }}
+        </div>
+
+        <form action="/guardar_foto_producto/{{ id }}" method="POST" enctype="multipart/form-data">
+            
+            <label for="fileInput" class="upload-zone d-block">
+                <i class="fas fa-cloud-upload-alt upload-icon fa-bounce" style="--fa-animation-duration: 2s;"></i>
+                <h5 class="fw-bold mb-2">Toca para elegir una foto</h5>
+                <p class="small text-muted mb-0">O arrastra la imagen aquí</p>
+                <input type="file" id="fileInput" name="foto_producto" accept="image/*" hidden required onchange="mostrarNombreArchivo(this)">
+            </label>
+            
+            <p id="fileNameMessage" class="text-success fw-bold d-none mb-3">
+                <i class="fas fa-check-circle me-2"></i> <span id="fileNameText"></span>
+            </p>
+
+            <button type="submit" class="btn btn-gradient shadow">
+                Subir Foto Ahora <i class="fas fa-rocket ms-2"></i>
+            </button>
+
+        </form>
+        
+        <p class="mt-4 mb-0 text-muted small">
+            Una vez subida, puedes cerrar esta ventana y volver a WhatsApp.
+        </p>
+    </div>
+
+    <script>
+        function mostrarNombreArchivo(input) {
+            const fileNameMessage = document.getElementById('fileNameMessage');
+            const fileNameText = document.getElementById('fileNameText');
+            const uploadZone = document.querySelector('.upload-zone');
+
+            if (input.files && input.files[0]) {
+                fileNameText.textContent = input.files[0].name;
+                fileNameMessage.classList.remove('d-none');
+                uploadZone.style.borderColor = '#22c55e'; // Verde éxito
+                uploadZone.style.backgroundColor = '#f0fdf4';
+            } else {
+                fileNameMessage.classList.add('d-none');
+                uploadZone.style.borderColor = ''; // Reset
+                uploadZone.style.backgroundColor = '';
+            }
+        }
+
+        // Pequeño script para efecto visual al arrastrar archivos
+        const uploadZone = document.querySelector('.upload-zone');
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                uploadZone.classList.add('dragover');
+            }, false);
+        });
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                uploadZone.classList.remove('dragover');
+            }, false);
+        });
+        uploadZone.addEventListener('drop', (e) => {
+            const fileInput = document.getElementById('fileInput');
+            fileInput.files = e.dataTransfer.files;
+            mostrarNombreArchivo(fileInput);
+        }, false);
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,11 @@
+Flask
+Flask-WTF
+flask-talisman
+Authlib
+qrcode
+Pillow
+gunicorn
+requests
+email-validator
+werkzeug
+psycopg2-binary

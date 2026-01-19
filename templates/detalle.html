@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ comercio.nombre_negocio }} | Barrio Market</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-dark@4/dark.css" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Outfit', sans-serif; background-color: #f8fafc; padding-bottom: 120px; overflow-x: hidden; }
+        
+        /* --- HEADER HERO DINÁMICO --- */
+        .shop-header {
+            position: relative; height: 420px;
+            display: flex; align-items: flex-end; justify-content: center;
+            padding-bottom: 50px; border-radius: 0 0 60px 60px;
+            overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .bg-slide {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover; background-position: center;
+            opacity: 0; transform: scale(1);
+            transition: opacity 1.5s ease-in-out, transform 8s linear;
+            z-index: 0;
+        }
+        .bg-slide.active { opacity: 1; transform: scale(1.15); }
+        
+        .overlay-gradient {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(15, 23, 42, 0.2) 0%, rgba(15, 23, 42, 0.9) 100%);
+            z-index: 1;
+        }
+
+        .shop-info-card {
+            position: relative; z-index: 10;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            padding: 30px; border-radius: 30px;
+            text-align: center; color: white;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: 90%; max-width: 500px;
+            margin-bottom: -70px;
+            animation: fadeInUp 1s;
+        }
+
+        .shop-logo {
+            width: 110px; height: 110px; border-radius: 25px; 
+            object-fit: cover; background: white; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            margin-top: -80px; margin-bottom: 15px; border: 4px solid white;
+        }
+
+        /* --- CARTEL ABIERTO PARPADEANTE --- */
+        .badge-open {
+            background: rgba(16, 185, 129, 0.2);
+            color: #4ade80;
+            border: 1px solid rgba(16, 185, 129, 0.5);
+            padding: 8px 16px; border-radius: 50px; font-weight: 800; font-size: 0.9rem;
+            display: inline-flex; align-items: center; gap: 8px;
+            text-transform: uppercase; letter-spacing: 1px; backdrop-filter: blur(5px);
+        }
+        .pulse-dot {
+            width: 10px; height: 10px; background-color: #4ade80; border-radius: 50%;
+            box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); animation: pulse-green 2s infinite;
+        }
+        @keyframes pulse-green {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(74, 222, 128, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+        }
+
+        .main-content { margin-top: 100px; }
+
+        .product-card {
+            background: white; border: none; border-radius: 24px; overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.03); 
+            transition: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            height: 100%; display: flex; flex-direction: column; position: relative;
+        }
+        .product-card:hover { transform: translateY(-8px); box-shadow: 0 20px 50px rgba(99, 102, 241, 0.15); }
+
+        .prod-img-box { position: relative; height: 220px; overflow: hidden; }
+        .prod-img { width: 100%; height: 100%; object-fit: cover; transition: 0.6s; }
+        .product-card:hover .prod-img { transform: scale(1.1); }
+
+        .btn-add-anim {
+            width: 50px; height: 50px; border-radius: 18px;
+            background: #0f172a; color: white; border: none;
+            position: absolute; bottom: 15px; right: 15px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+            transition: 0.2s; z-index: 5; font-size: 1.3rem;
+        }
+        .btn-add-anim:hover { transform: scale(1.1); background: #6366f1; }
+        .btn-add-anim:active { transform: scale(0.9); }
+        
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
+        .shake-anim { animation: shake 0.3s; background: #ef4444 !important; }
+
+        /* --- NUEVO CARRITO FLOTANTE (Circular) --- */
+        .cart-float {
+            position: fixed; 
+            bottom: 30px; 
+            right: 30px; /* A la derecha */
+            left: auto; /* Quitamos el centrado */
+            transform: none; /* Quitamos el transform */
+            
+            background: #0f172a; color: white;
+            width: 65px; height: 65px; /* Redondo */
+            border-radius: 50%;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.4);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1000; cursor: pointer;
+            transition: 0.3s; border: 2px solid rgba(255,255,255,0.1);
+        }
+        .cart-float:hover { transform: scale(1.1) rotate(-10deg); background: #1e293b; }
+        
+        /* Badge Rojo con número */
+        .cart-badge { 
+            position: absolute; 
+            top: -5px; right: -5px;
+            background: #ef4444; color: white; 
+            font-weight: 800; font-size: 0.85rem;
+            width: 28px; height: 28px; 
+            border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            border: 2px solid white;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            animation: bounceIn 0.5s;
+        }
+
+        /* Efecto Bump al agregar */
+        @keyframes bump { 0%{transform: scale(1);} 50%{transform: scale(1.2);} 100%{transform: scale(1);} }
+        .bump-anim { animation: bump 0.3s ease-in-out; }
+
+        .search-container { position: relative; max-width: 600px; margin: 0 auto 50px auto; z-index: 5; }
+        .search-input {
+            width: 100%; border: none; padding: 18px 25px 18px 55px;
+            border-radius: 50px; background: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); font-weight: 500; font-size: 1.1rem;
+            transition: 0.3s;
+        }
+        .search-input:focus { outline: none; box-shadow: 0 15px 40px rgba(99, 102, 241, 0.2); }
+        .search-icon { position: absolute; left: 25px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 1.2rem; }
+    </style>
+</head>
+<body>
+
+    <a href="/" class="btn btn-light rounded-circle shadow position-fixed top-0 start-0 m-3 d-flex align-items-center justify-content-center" style="z-index: 100; width: 50px; height: 50px; transition: 0.3s;">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+
+    <header class="shop-header">
+        <div id="hero-slides"></div>
+        <div class="overlay-gradient"></div>
+
+        <div class="shop-info-card">
+            {% if comercio.logo_url %}
+            <img src="{{ comercio.logo_url }}" class="shop-logo animate__animated animate__zoomIn">
+            {% else %}
+            <div class="shop-logo d-flex align-items-center justify-content-center text-muted fs-1 mx-auto"><i class="fas fa-store"></i></div>
+            {% endif %}
+            
+            <h1 class="fw-900 mb-1 text-white text-shadow">{{ comercio.nombre_negocio }}</h1>
+            <p class="text-white-50 small mb-3 fw-bold text-uppercase ls-1">{{ comercio.categoria }}</p>
+            
+            <div class="d-flex justify-content-center align-items-center gap-2 mb-2">
+                {% if comercio.estado_abierto %}
+                    <div class="badge-open"><div class="pulse-dot"></div>Abierto</div>
+                {% else %}
+                    <div class="badge bg-danger text-white rounded-pill px-3 py-2 fw-bold border border-danger border-opacity-50 shadow"><i class="fas fa-door-closed me-2"></i> Cerrado</div>
+                {% endif %}
+                <span class="badge bg-warning text-dark rounded-pill px-3 fw-bold border border-white border-opacity-25" style="padding: 9px;"><i class="fas fa-star me-1"></i> {{ promedio }}</span>
+            </div>
+
+            <div class="text-white-50 small mt-2 d-flex flex-column gap-1">
+                <span><i class="fas fa-map-marker-alt me-1 text-warning"></i> {{ comercio.direccion }}</span>
+                {% if comercio.horarios %}<span><i class="fas fa-clock me-1 text-info"></i> {{ comercio.horarios }}</span>{% endif %}
+            </div>
+        </div>
+    </header>
+
+    <div class="container main-content">
+        <div class="search-container animate__animated animate__fadeInUp animate__delay-1s">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="buscador" class="search-input" placeholder="¿Qué se te antoja hoy?" onkeyup="filtrarProductos()">
+        </div>
+
+        <div class="row g-4" id="listaProductos">
+            {% if productos %}
+                {% for p in productos %}
+                <div class="col-12 col-md-6 col-lg-3 prod-item animate__animated animate__fadeInUp">
+                    <div class="product-card">
+                        <div class="prod-img-box">
+                            {% if p.imagen_url %}<img src="{{ p.imagen_url }}" class="prod-img">{% else %}<div class="prod-img d-flex align-items-center justify-content-center bg-light text-muted"><i class="fas fa-utensils fa-2x opacity-25"></i></div>{% endif %}
+                            
+                            <button class="btn-add-anim" id="btn-add-{{ p.id }}" onclick="agregarAlCarrito({{ p.id }}, '{{ p.nombre_producto }}', {{ p.precio }}, {{ p.stock }})">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="p-4 d-flex flex-column flex-grow-1">
+                            <h5 class="fw-bold mb-1 text-dark text-truncate nombre-prod">{{ p.nombre_producto }}</h5>
+                            <div class="mt-auto d-flex justify-content-between align-items-end border-top pt-3">
+                                <div><small class="text-muted d-block" style="font-size: 0.75rem;">Precio</small><span class="fw-900 fs-4 text-dark">${{ p.precio }}</span></div>
+                                {% if p.stock < 10 %}<span class="text-danger fw-bold small"><i class="fas fa-bolt me-1"></i>Quedan {{ p.stock }}</span>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12 text-center py-5"><i class="fas fa-store-slash fa-3x text-muted mb-3 opacity-25"></i><h5 class="text-muted">Aún no hay productos disponibles.</h5></div>
+            {% endif %}
+        </div>
+
+        <div class="mt-5 pt-5">
+            <h4 class="fw-bold mb-4 ps-2 border-start border-4 border-warning"> &nbsp;Lo que dice la gente</h4>
+            {% if resenas %}
+                <div class="row g-3">
+                    {% for r in resenas %}
+                    <div class="col-md-6"><div class="p-3 bg-white rounded-4 shadow-sm border border-light"><div class="d-flex justify-content-between mb-2"><div class="text-warning small">{% for i in range(r.puntaje) %}<i class="fas fa-star"></i>{% endfor %}</div><small class="text-muted opacity-50">{{ r.fecha }}</small></div><p class="m-0 text-dark small fw-medium">"{{ r.comentario }}"</p></div></div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted ms-3">Sé el primero en opinar sobre este lugar.</p>
+            {% endif %}
+            <button class="btn btn-outline-dark rounded-pill mt-4 px-4 fw-bold ms-2" data-bs-toggle="modal" data-bs-target="#modalResena"><i class="fas fa-star me-2"></i> Dejar Opinión</button>
+        </div>
+    </div>
+
+    <div id="cartButton" class="cart-float d-none animate__animated animate__zoomIn" onclick="abrirCarrito()">
+        <i class="fas fa-shopping-cart fa-lg"></i>
+        <div class="cart-badge" id="cartCount">0</div>
+    </div>
+
+    <div class="modal fade" id="modalCarrito" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content rounded-4 border-0 shadow-lg">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="fw-900">Tu Canasta 🛒</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="cartItemsContainer"></div>
+                <div class="modal-footer border-0 pt-0 flex-column bg-light rounded-bottom-4">
+                    <div class="d-flex justify-content-between w-100 mb-3 fs-4 fw-900 border-top pt-3 text-dark">
+                        <span>Total Final</span>
+                        <span class="text-primary" id="modalTotal">$0</span>
+                    </div>
+                    <button onclick="enviarPedidoWhatsApp()" class="btn btn-success w-100 rounded-pill py-3 fw-bold fs-5 shadow">
+                        <i class="fab fa-whatsapp me-2"></i> Enviar Pedido
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalResena" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 p-4">
+                <h5 class="fw-bold mb-3">Tu opinión cuenta</h5>
+                <form action="/comercio/{{ comercio.id }}/calificar" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <select name="puntaje" class="form-select rounded-pill mb-3 bg-light border-0 py-3 fw-bold">
+                            <option value="5">⭐⭐⭐⭐⭐ Excelente</option>
+                            <option value="4">⭐⭐⭐⭐ Muy bueno</option>
+                            <option value="3">⭐⭐⭐ Regular</option>
+                            <option value="2">⭐⭐ Malo</option>
+                            <option value="1">⭐ Terrible</option>
+                        </select>
+                        <textarea name="comentario" class="form-control rounded-4 bg-light border-0 p-3" rows="3" placeholder="¿Qué te pareció?" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-dark w-100 rounded-pill py-3 fw-bold">Publicar Reseña</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script>
+        const productImages = [
+            {% for p in productos if p.imagen_url %}"{{ p.imagen_url }}",{% endfor %}
+        ];
+        if (productImages.length === 0) {
+            const cat = "{{ comercio.categoria }}";
+            productImages.push(`https://source.unsplash.com/random/1200x800/?${cat},store`, `https://source.unsplash.com/random/1200x800/?${cat},food`);
+        }
+
+        const heroSlides = document.getElementById('hero-slides');
+        productImages.forEach((url, index) => {
+            const div = document.createElement('div');
+            div.className = `bg-slide ${index === 0 ? 'active' : ''}`;
+            div.style.backgroundImage = `url('${url}')`;
+            heroSlides.appendChild(div);
+        });
+
+        if (productImages.length > 1) {
+            let currentSlide = 0;
+            const slides = document.getElementsByClassName('bg-slide');
+            setInterval(() => {
+                slides[currentSlide].classList.remove('active');
+                currentSlide = (currentSlide + 1) % slides.length;
+                slides[currentSlide].classList.add('active');
+            }, 5000);
+        }
+
+        let cart = {}; 
+        const phone = "{{ comercio.telefono }}";
+        const tiendaAbierta = {{ comercio.estado_abierto }};
+
+        function agregarAlCarrito(id, name, price, maxStock) {
+            if (!tiendaAbierta) {
+                Swal.fire({ icon: 'error', title: 'Tienda Cerrada 🔒', text: 'Este comercio no está recibiendo pedidos en este momento.', confirmButtonColor: '#ef4444' });
+                return;
+            }
+
+            let currentQty = cart[id] ? cart[id].qty : 0;
+            if (currentQty >= maxStock) {
+                const btn = document.getElementById(`btn-add-${id}`);
+                btn.classList.add('shake-anim');
+                setTimeout(() => btn.classList.remove('shake-anim'), 300);
+                Swal.fire({ icon: 'warning', title: '¡Stock al límite!', text: `Solo quedan ${maxStock} unidades de ${name}.`, toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, background: '#1e293b', color: '#fff' });
+                return;
+            }
+
+            if (cart[id]) cart[id].qty++;
+            else cart[id] = { name: name, price: price, qty: 1, max: maxStock };
+            
+            actualizarUI();
+            
+            // Animación de botón flotante
+            const floatBtn = document.getElementById('cartButton');
+            floatBtn.classList.remove('bump-anim');
+            void floatBtn.offsetWidth; // Trigger reflow
+            floatBtn.classList.add('bump-anim');
+
+            const Toast = Swal.mixin({ toast: true, position: 'bottom-end', showConfirmButton: false, timer: 1500, background: '#10b981', color: '#fff', iconColor: '#fff' });
+            Toast.fire({ icon: 'success', title: 'Agregado' });
+        }
+
+        function restarDelCarrito(id) {
+            if (cart[id]) {
+                cart[id].qty--;
+                if (cart[id].qty <= 0) delete cart[id];
+                actualizarUI();
+            }
+        }
+
+        function abrirCarrito() {
+            if (Object.keys(cart).length === 0) {
+                Swal.fire({ title: 'Tu canasta está vacía', text: '¡Agrega algo rico antes de pedir!', imageUrl: 'https://cdn-icons-png.flaticon.com/512/2038/2038854.png', imageWidth: 100, imageHeight: 100, imageAlt: 'Empty Cart', confirmButtonText: 'Entendido', confirmButtonColor: '#0f172a' });
+                return;
+            }
+            const modal = new bootstrap.Modal(document.getElementById('modalCarrito'));
+            modal.show();
+        }
+
+        function actualizarUI() {
+            let totalQty = 0;
+            let totalPrice = 0;
+            let htmlItems = '';
+
+            for (const [id, item] of Object.entries(cart)) {
+                totalQty += item.qty;
+                totalPrice += item.qty * item.price;
+                
+                htmlItems += `
+                <div class="d-flex justify-content-between align-items-center py-3 border-bottom animate__animated animate__fadeIn">
+                    <div>
+                        <div class="fw-bold text-dark">${item.name}</div>
+                        <div class="text-muted small">$${item.price} x ${item.qty}</div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 bg-white border rounded-pill p-1">
+                        <button class="btn btn-sm btn-light rounded-circle fw-bold text-danger" onclick="restarDelCarrito(${id})" style="width:30px; height:30px;">-</button>
+                        <span class="fw-bold px-2">${item.qty}</span>
+                        <button class="btn btn-sm btn-light rounded-circle fw-bold text-success" onclick="agregarAlCarrito(${id}, '${item.name}', ${item.price}, ${item.max})" style="width:30px; height:30px;">+</button>
+                    </div>
+                </div>`;
+            }
+
+            document.getElementById('cartCount').innerText = totalQty;
+            document.getElementById('modalTotal').innerText = '$' + totalPrice;
+            
+            const floatBtn = document.getElementById('cartButton');
+            if (totalQty > 0) floatBtn.classList.remove('d-none');
+            else floatBtn.classList.add('d-none');
+
+            document.getElementById('cartItemsContainer').innerHTML = htmlItems || '<div class="text-center py-5 text-muted"><p>Nada por aquí...</p></div>';
+        }
+
+        function enviarPedidoWhatsApp() {
+            if (Object.keys(cart).length === 0) return;
+
+            let mensaje = `👋 Hola *{{ comercio.nombre_negocio }}*, quisiera pedir:\n\n`;
+            let total = 0;
+
+            for (const [id, item] of Object.entries(cart)) {
+                let subtotal = item.qty * item.price;
+                mensaje += `▪️ ${item.qty}x ${item.name} ($${subtotal})\n`;
+                total += subtotal;
+            }
+
+            mensaje += `\n💰 *TOTAL: $${total}*\n`;
+            mensaje += `\n📍 *Dirección de envío:* (Escribir aquí)`;
+            
+            let url = `https://wa.me/${phone}?text=${encodeURIComponent(mensaje)}`;
+            window.open(url, '_blank');
+        }
+
+        function filtrarProductos() {
+            let input = document.getElementById('buscador').value.toLowerCase();
+            let cards = document.getElementsByClassName('prod-item');
+            for (let i = 0; i < cards.length; i++) {
+                let name = cards[i].querySelector('.nombre-prod').innerText.toLowerCase();
+                cards[i].style.display = name.includes(input) ? "" : "none";
+            }
+        }
+    </script>
+</body>
+</html>

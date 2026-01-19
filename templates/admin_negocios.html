@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Flota | Barrio Market</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Outfit', sans-serif; background-color: #f1f5f9; padding-bottom: 80px; }
+        
+        /* HEADER IGUAL AL DASHBOARD */
+        .admin-header {
+            background: #0f172a; color: white; padding: 40px 0 80px 0;
+            border-radius: 0 0 40px 40px; margin-bottom: -40px; position: relative;
+        }
+
+        /* TABLA MODERNA */
+        .card-table {
+            background: white; border-radius: 20px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); overflow: hidden;
+            border: none; position: relative; z-index: 10;
+        }
+        
+        .table-custom th { background: #f8fafc; padding: 20px; font-weight: 800; color: #64748b; border: none; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
+        .table-custom td { padding: 20px; vertical-align: middle; border-bottom: 1px solid #f1f5f9; background: white; }
+        .table-custom tr:hover td { background-color: #f8fafc; }
+        
+        .biz-logo { width: 50px; height: 50px; border-radius: 12px; object-fit: cover; border: 1px solid #e2e8f0; }
+        
+        /* BOTONES DE ACCIÓN */
+        .btn-icon {
+            width: 40px; height: 40px; border-radius: 12px; display: inline-flex; 
+            align-items: center; justify-content: center; transition: 0.2s; 
+            border: none; margin-left: 5px; text-decoration: none;
+        }
+        .btn-icon:hover { transform: scale(1.15); }
+        
+        .btn-vip { background: #fffbeb; color: #d97706; }
+        .btn-vip.active { background: #f59e0b; color: white; box-shadow: 0 5px 15px rgba(245, 158, 11, 0.4); }
+        
+        .btn-verif { background: #eff6ff; color: #3b82f6; }
+        .btn-verif.active { background: #3b82f6; color: white; box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4); }
+        
+        .btn-danger-soft { background: #fef2f2; color: #ef4444; }
+        .btn-danger-soft:hover { background: #ef4444; color: white; }
+
+        .search-box {
+            border: none; padding: 15px 25px; border-radius: 50px; width: 100%;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05); outline: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="admin-header">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <a href="/admin" class="text-white-50 text-decoration-none fw-bold mb-2 d-inline-block"><i class="fas fa-arrow-left me-2"></i>Volver al Panel</a>
+                    <h2 class="fw-900 m-0">Gestión de Negocios</h2>
+                </div>
+                <div class="bg-white bg-opacity-10 px-4 py-2 rounded-pill border border-white border-opacity-25">
+                    <span class="fw-bold">{{ activos|length }}</span> Comercios Activos
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        
+        <div class="row justify-content-center mb-4" style="position: relative; z-index: 20;">
+            <div class="col-md-6">
+                <input type="text" id="searchInput" class="search-box animate__animated animate__fadeInUp" placeholder="🔍 Buscar por nombre, dueño o categoría..." onkeyup="filterTable()">
+            </div>
+        </div>
+
+        <div class="card card-table animate__animated animate__fadeInUp" style="animation-delay: 0.1s;">
+            <div class="table-responsive">
+                <table class="table table-custom mb-0" id="bizTable">
+                    <thead>
+                        <tr>
+                            <th>Identidad</th>
+                            <th>Info de Contacto</th>
+                            <th>Rendimiento</th>
+                            <th class="text-center">Insignias</th>
+                            <th class="text-center">Estado</th>
+                            <th class="text-end">Control</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in activos %}
+                        <tr id="negocio-{{ c.id }}">
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    {% if c.logo_url %}
+                                    <img src="{{ c.logo_url }}" class="biz-logo">
+                                    {% else %}
+                                    <div class="biz-logo d-flex align-items-center justify-content-center bg-light text-muted"><i class="fas fa-store"></i></div>
+                                    {% endif %}
+                                    <div>
+                                        <h6 class="fw-bold m-0 text-dark">{{ c.nombre_negocio }}</h6>
+                                        <small class="text-muted text-uppercase" style="font-size: 0.7rem;">{{ c.categoria }}</small>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>
+                                <div class="d-flex flex-column">
+                                    <span class="fw-bold text-dark small"><i class="fas fa-user me-2 text-secondary"></i>{{ c.usuario }}</span>
+                                    <span class="text-muted small"><i class="fas fa-envelope me-2 text-secondary"></i>{{ c.email }}</span>
+                                </div>
+                            </td>
+
+                            <td>
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 rounded-pill fw-bold">
+                                    ${{ c.total_vendido }}
+                                </span>
+                            </td>
+
+                            <td class="text-center">
+                                <a href="/admin/toggle_vip/{{ c.id }}" class="btn-icon btn-vip {{ 'active' if c.es_destacado else '' }}" title="Destacar (VIP)">
+                                    <i class="fas fa-crown"></i>
+                                </a>
+                                <a href="/admin/toggle_verificado/{{ c.id }}" class="btn-icon btn-verif {{ 'active' if c.es_verificado else '' }}" title="Verificar Oficial">
+                                    <i class="fas fa-check-circle"></i>
+                                </a>
+                            </td>
+
+                            <td class="text-center">
+                                {% if c.estado == 'activo' %}
+                                    <span class="badge bg-success rounded-pill">Activo</span>
+                                {% else %}
+                                    <span class="badge bg-danger rounded-pill">Suspendido</span>
+                                {% endif %}
+                            </td>
+
+                            <td class="text-end">
+                                {% if c.estado == 'activo' %}
+                                    <a href="/admin/estado/{{ c.id }}/suspender" class="btn-icon btn-danger-soft" title="Suspender Temporalmente">
+                                        <i class="fas fa-pause"></i>
+                                    </a>
+                                {% else %}
+                                    <a href="/admin/estado/{{ c.id }}/activar" class="btn-icon bg-success text-white" title="Reactivar">
+                                        <i class="fas fa-play"></i>
+                                    </a>
+                                {% endif %}
+                                
+                                <a href="/admin/eliminar_negocio/{{ c.id }}" class="btn-icon bg-dark text-white" title="Eliminar Definitivamente" onclick="return confirm('⚠️ ¿ESTÁS SEGURO?\nEsta acción borrará el negocio y todos sus datos para siempre.')">
+                                    <i class="fas fa-trash-alt"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <i class="fas fa-folder-open fa-3x text-muted opacity-25 mb-3"></i>
+                                <p class="text-muted fw-bold">No hay negocios registrados aún.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function filterTable() {
+            var input, filter, table, tr, td, i, txtValue;
+            input = document.getElementById("searchInput");
+            filter = input.value.toUpperCase();
+            table = document.getElementById("bizTable");
+            tr = table.getElementsByTagName("tr");
+
+            for (i = 1; i < tr.length; i++) { // Empezar en 1 para saltar el header
+                // Buscar en Nombre (col 0) y Usuario (col 1)
+                let found = false;
+                let tds = tr[i].getElementsByTagName("td");
+                
+                if(tds.length > 0) {
+                    if (tds[0].textContent.toUpperCase().indexOf(filter) > -1 || tds[1].textContent.toUpperCase().indexOf(filter) > -1) {
+                        found = true;
+                    }
+                }
+                
+                if (found) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+    </script>
+
+</body>
+</html>

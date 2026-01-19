@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Control | Barrio Market</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root { --primary: #6366f1; --dark: #0f172a; --card-bg: #1e293b; --text: #ffffff; --text-muted: #e2e8f0; }
+        body { font-family: 'Outfit', sans-serif; background-color: var(--dark); color: var(--text); overflow-x: hidden; }
+
+        /* Sidebar Glass */
+        .sidebar {
+            width: 260px; height: 100vh; position: fixed; top: 0; left: 0;
+            background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(15px);
+            border-right: 1px solid rgba(255,255,255,0.1); padding: 30px; z-index: 100;
+        }
+        .main-content { margin-left: 260px; padding: 40px; }
+
+        /* Tarjetas de Estadísticas */
+        .stat-card {
+            background: linear-gradient(145deg, #1e293b, #263345);
+            border-radius: 20px; padding: 25px; position: relative; overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: transform 0.3s;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .stat-card:hover { transform: translateY(-5px); border-color: var(--primary); }
+        .stat-icon {
+            position: absolute; right: -10px; bottom: -10px; font-size: 5rem;
+            opacity: 0.1; transform: rotate(-15deg);
+        }
+        .stat-label { color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px; font-size: 0.8rem; }
+
+        /* Tablas Pro */
+        .glass-table {
+            background: rgba(30, 41, 59, 0.6); border-radius: 20px;
+            overflow: hidden; border: 1px solid rgba(255,255,255,0.05);
+        }
+        .table { color: var(--text); margin: 0; }
+        .table thead th {
+            background: rgba(15, 23, 42, 0.6); text-transform: uppercase;
+            font-size: 0.75rem; letter-spacing: 1px; color: var(--text-muted); border: none; padding: 15px;
+        }
+        .table tbody td { border-bottom: 1px solid rgba(255,255,255,0.1); padding: 15px; vertical-align: middle; }
+        .table-hover tbody tr:hover { background-color: rgba(255,255,255,0.05); }
+        
+        /* Badges e Interruptores */
+        .badge-pro { padding: 8px 12px; border-radius: 30px; font-weight: 600; font-size: 0.75rem; letter-spacing: 0.5px; }
+        .bg-gradient-success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; }
+        .bg-gradient-warning { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; }
+        .bg-gradient-danger { background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color: white; }
+
+        .action-btn {
+            width: 35px; height: 35px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            transition: 0.2s; border: none; cursor: pointer; text-decoration: none;
+        }
+        .btn-vip { background: rgba(251, 191, 36, 0.1); color: #fbbf24; }
+        .btn-vip.active { background: #fbbf24; color: black; box-shadow: 0 0 15px rgba(251, 191, 36, 0.5); }
+        
+        .btn-verify { background: rgba(56, 189, 248, 0.1); color: #38bdf8; }
+        .btn-verify.active { background: #38bdf8; color: white; box-shadow: 0 0 15px rgba(56, 189, 248, 0.5); }
+
+        .btn-pause { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+        .btn-pause:hover { background: #ef4444; color: white; }
+        
+        .btn-play { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
+        .btn-play:hover { background: #22c55e; color: white; }
+
+        .section-title { color: var(--text-muted); letter-spacing: 1px; }
+        .nav-link-secondary { color: var(--text-muted) !important; transition: 0.3s; }
+        .nav-link-secondary:hover { color: var(--text) !important; }
+
+    </style>
+</head>
+<body>
+
+    <div class="sidebar d-flex flex-column">
+        <div class="mb-5 d-flex align-items-center gap-3">
+            <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; box-shadow: 0 0 20px rgba(99, 102, 241, 0.5);">
+                <i class="fas fa-bolt text-white"></i>
+            </div>
+            <h5 class="fw-bold m-0">Admin<span class="text-primary">Pro</span></h5>
+        </div>
+
+        <ul class="nav flex-column gap-2">
+            <li class="nav-item">
+                <a href="#" class="nav-link text-white fw-bold bg-white bg-opacity-10 rounded-3"><i class="fas fa-th-large me-3"></i> Dashboard</a>
+            </li>
+            <li class="nav-item">
+                <a href="/" target="_blank" class="nav-link nav-link-secondary"><i class="fas fa-external-link-alt me-3"></i> Ver Plataforma</a>
+            </li>
+        </ul>
+
+        <div class="mt-auto">
+            <a href="/logout" class="btn btn-outline-danger w-100 rounded-pill fw-bold border-2"><i class="fas fa-sign-out-alt me-2"></i> Cerrar Sesión</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        
+        <div class="d-flex justify-content-between align-items-end mb-5 animate__animated animate__fadeInDown">
+            <div>
+                <h6 class="text-primary fw-bold mb-1">BIENVENIDO, JEFE</h6>
+                <h2 class="fw-bold display-6">Visión General</h2>
+            </div>
+            <div class="text-end">
+                <span class="badge bg-dark border border-secondary p-2 rounded-pill text-white-50 small">
+                    <i class="fas fa-clock me-1"></i> Actualizado hace instantes
+                </span>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-5 animate__animated animate__fadeInUp">
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <h6 class="stat-label">NEGOCIOS ACTIVOS</h6>
+                    <h2 class="fw-bold display-4 mb-0 text-success">{{ activos|length }}</h2>
+                    <i class="fas fa-store stat-icon text-success"></i>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <h6 class="stat-label">SOLICITUDES PENDIENTES</h6>
+                    <h2 class="fw-bold display-4 mb-0 text-warning">{{ pendientes|length }}</h2>
+                    <i class="fas fa-user-clock stat-icon text-warning"></i>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <h6 class="stat-label">VENTAS TOTALES</h6>
+                    <h2 class="fw-bold display-4 mb-0 text-primary">${{ ventas_grafico|sum }}</h2>
+                    <i class="fas fa-chart-line stat-icon text-primary"></i>
+                </div>
+            </div>
+        </div>
+
+        {% if pendientes %}
+        <div class="mb-5 animate__animated animate__pulse animate__infinite" style="animation-duration: 3s;">
+            <div class="p-4 rounded-4 bg-gradient-warning shadow-lg text-white d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="fw-bold"><i class="fas fa-bell me-2"></i> Hay {{ pendientes|length }} negocios esperando aprobación</h4>
+                    <p class="mb-0 opacity-75">Revisa sus datos antes de darles acceso a la plataforma.</p>
+                </div>
+            </div>
+            <div class="glass-table mt-3">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Negocio</th>
+                            <th>Contacto</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in pendientes %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ p.nombre_negocio }}</div>
+                                <small class="text-white-50">{{ p.categoria }}</small>
+                            </td>
+                            <td>
+                                <div>{{ p.telefono }}</div>
+                                <small class="text-white-50">{{ p.email }}</small>
+                            </td>
+                            <td>
+                                <a href="/admin/aprobar/{{ p.id }}" class="btn btn-light btn-sm rounded-pill fw-bold px-3">
+                                    <i class="fas fa-check text-success me-1"></i> Aprobar
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="row g-4">
+            <div class="col-lg-8 animate__animated animate__fadeInLeft">
+                <h5 class="fw-bold mb-3 section-title">GESTIÓN DE FLOTA</h5>
+                <div class="glass-table">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Info Negocio</th>
+                                    <th class="text-center">Ventas</th>
+                                    <th class="text-center">Estado</th>
+                                    <th class="text-center">VIP</th>
+                                    <th class="text-center">Verificado</th>
+                                    <th class="text-end">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for c in activos %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-3">
+                                            {% if c.logo_url %}
+                                            <img src="{{ c.logo_url }}" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                                            {% else %}
+                                            <div class="rounded-circle bg-dark d-flex align-items-center justify-content-center border border-secondary" style="width: 40px; height: 40px;"><i class="fas fa-store text-muted"></i></div>
+                                            {% endif %}
+                                            <div>
+                                                <div class="fw-bold text-white">{{ c.nombre_negocio }}</div>
+                                                <small class="text-white-50">{{ c.telefono }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center fw-bold text-success">
+                                        ${{ c.total_vendido }}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if c.estado == 'activo' %}
+                                            <span class="badge-pro bg-gradient-success">Activo</span>
+                                        {% else %}
+                                            <span class="badge-pro bg-gradient-danger">Pausado</span>
+                                        {% endif %}
+                                    </td>
+                                    
+                                    <td class="text-center">
+                                        <a href="/admin/toggle_vip/{{ c.id }}" class="action-btn btn-vip mx-auto {% if c.es_destacado %}active{% endif %}" title="Toggle VIP">
+                                            <i class="fas fa-crown"></i>
+                                        </a>
+                                    </td>
+
+                                    <td class="text-center">
+                                        <a href="/admin/toggle_verificado/{{ c.id }}" class="action-btn btn-verify mx-auto {% if c.es_verificado %}active{% endif %}" title="Toggle Verificado">
+                                            <i class="fas fa-check-circle"></i>
+                                        </a>
+                                    </td>
+
+                                    <td class="text-end">
+                                        {% if c.estado == 'activo' %}
+                                        <a href="/admin/estado/{{ c.id }}/suspender" class="action-btn btn-pause ms-auto" title="Suspender Tienda">
+                                            <i class="fas fa-power-off"></i>
+                                        </a>
+                                        {% else %}
+                                        <a href="/admin/estado/{{ c.id }}/activar" class="action-btn btn-play ms-auto" title="Reactivar Tienda">
+                                            <i class="fas fa-play"></i>
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 animate__animated animate__fadeInRight">
+                <h5 class="fw-bold mb-3 section-title">METRICAS</h5>
+                <div class="stat-card h-100">
+                    <canvas id="ventasChart"></canvas>
+                    <div class="mt-4 text-center">
+                        <small class="text-white-50 d-block mb-2">Total acumulado en plataforma</small>
+                        <h3 class="fw-bold text-white">${{ ventas_grafico|sum }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuración del Gráfico
+        const ctx = document.getElementById('ventasChart').getContext('2d');
+        const nombres = {{ nombres_grafico | tojson }};
+        const ventas = {{ ventas_grafico | tojson }};
+
+        // Si no hay ventas, mostramos un gráfico vacío más elegante
+        let data_chart = ventas;
+        let labels_chart = nombres;
+        let colors_chart = ['#6366f1', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b'];
+        
+        if (ventas.reduce((a, b) => a + b, 0) === 0) {
+            data_chart = [1]; // Un valor ficticio para que se vea el círculo
+            labels_chart = ['Sin ventas aún'];
+            colors_chart = ['#334155']; // Color gris oscuro
+        }
+
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels_chart,
+                datasets: [{
+                    data: data_chart,
+                    backgroundColor: colors_chart,
+                    borderWidth: 0,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: '#e2e8f0', usePointStyle: true, padding: 20 } }
+                },
+                cutout: '75%'
+            }
+        });
+    </script>
+</body>
+</html>

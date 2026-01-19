@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Admin | Barrio Market</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Outfit', sans-serif; background-color: #f1f5f9; padding-bottom: 80px; }
+        
+        /* HEADER */
+        .admin-header {
+            background: #0f172a; color: white; padding: 40px 0 80px 0;
+            border-radius: 0 0 40px 40px; margin-bottom: -40px; position: relative;
+        }
+        
+        /* TARJETAS KPI */
+        .kpi-card {
+            background: white; border-radius: 20px; padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08); transition: 0.3s;
+            border: 1px solid rgba(0,0,0,0.02); height: 100%;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .kpi-card:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(0,0,0,0.12); }
+        .kpi-icon { width: 60px; height: 60px; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; }
+        
+        /* LISTA PENDIENTES */
+        .request-card {
+            background: white; border-radius: 15px; overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-bottom: 15px;
+            border-left: 5px solid #fbbf24; transition: 0.2s;
+        }
+        .request-card:hover { transform: translateX(5px); }
+        
+        /* TABLA ACTIVOS */
+        .table-custom { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
+        .table-custom th { background: #f8fafc; padding: 15px 20px; font-weight: 700; color: #64748b; border: none; }
+        .table-custom td { padding: 15px 20px; vertical-align: middle; border-bottom: 1px solid #f1f5f9; }
+        .table-custom tr:last-child td { border-bottom: none; }
+        
+        .action-btn { width: 35px; height: 35px; border-radius: 10px; display: flex; align-items: center; justify-content: center; transition: 0.2s; text-decoration: none; border: none; }
+        .action-btn:hover { transform: scale(1.2); }
+        
+        .toggle-active { color: #cbd5e1; cursor: pointer; transition: 0.2s; }
+        .toggle-active.on { color: #f59e0b; text-shadow: 0 0 10px rgba(245, 158, 11, 0.5); } /* VIP Dorado */
+        .toggle-verified.on { color: #3b82f6; text-shadow: 0 0 10px rgba(59, 130, 246, 0.5); } /* Verificado Azul */
+    </style>
+</head>
+<body>
+
+    <div class="admin-header">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <span class="badge bg-danger bg-opacity-25 text-white border border-white border-opacity-25 px-3 py-1 rounded-pill fw-bold mb-2">MODO SUPER ADMIN</span>
+                    <h2 class="fw-900 m-0">Panel de Control</h2>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="/" class="btn btn-outline-light rounded-pill fw-bold px-4">Ir a la Web</a>
+                    <a href="/logout" class="btn btn-light rounded-pill fw-bold px-4 text-dark">Salir</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" style="position: relative; z-index: 10;">
+        
+        <div class="row g-4 mb-5">
+            <div class="col-md-4 animate__animated animate__fadeInUp">
+                <div class="kpi-card">
+                    <div>
+                        <h6 class="text-muted text-uppercase fw-bold small">Solicitudes</h6>
+                        <h1 class="fw-900 m-0 text-dark">{{ pendientes|length }}</h1>
+                    </div>
+                    <div class="kpi-icon bg-warning bg-opacity-10 text-warning"><i class="fas fa-bell"></i></div>
+                </div>
+            </div>
+            <div class="col-md-4 animate__animated animate__fadeInUp" style="animation-delay: 0.1s;">
+                <div class="kpi-card">
+                    <div>
+                        <h6 class="text-muted text-uppercase fw-bold small">Negocios Activos</h6>
+                        <h1 class="fw-900 m-0 text-primary">{{ activos|length }}</h1>
+                    </div>
+                    <div class="kpi-icon bg-primary bg-opacity-10 text-primary"><i class="fas fa-store"></i></div>
+                </div>
+            </div>
+            <div class="col-md-4 animate__animated animate__fadeInUp" style="animation-delay: 0.2s;">
+                <div class="kpi-card">
+                    <div>
+                        <h6 class="text-muted text-uppercase fw-bold small">Volumen Ventas (Total)</h6>
+                        {% set total_global = namespace(value=0) %}
+                        {% for c in activos %}{% set total_global.value = total_global.value + c.total_vendido %}{% endfor %}
+                        <h1 class="fw-900 m-0 text-success">${{ total_global.value }}</h1>
+                    </div>
+                    <div class="kpi-icon bg-success bg-opacity-10 text-success"><i class="fas fa-chart-line"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            
+            <div class="col-lg-4 animate__animated animate__fadeInLeft">
+                <h5 class="fw-bold mb-3 text-secondary"><i class="fas fa-clock me-2"></i>Pendientes de Aprobación</h5>
+                
+                {% if pendientes %}
+                    {% for p in pendientes %}
+                    <div class="request-card p-3">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                <i class="fas fa-user text-muted"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold m-0">{{ p.nombre_negocio }}</h6>
+                                <small class="text-muted">{{ p.categoria }}</small>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="/admin/aprobar/{{ p.id }}" class="btn btn-success btn-sm w-100 fw-bold rounded-3">Aprobar ✅</a>
+                            <a href="/admin/eliminar_negocio/{{ p.id }}" class="btn btn-outline-danger btn-sm w-100 fw-bold rounded-3" onclick="return confirm('¿Rechazar y eliminar permanentemente?')">Rechazar ❌</a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5 bg-white rounded-4 shadow-sm opacity-50">
+                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                        <p class="m-0 fw-bold">¡Todo al día!</p>
+                        <small>No hay solicitudes pendientes.</small>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="col-lg-8 animate__animated animate__fadeInRight">
+                <h5 class="fw-bold mb-3 text-secondary"><i class="fas fa-tasks me-2"></i>Gestión de Negocios</h5>
+                
+                <div class="table-responsive table-custom">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Negocio</th>
+                                <th>Ventas</th>
+                                <th class="text-center">VIP</th>
+                                <th class="text-center">Verif.</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in activos %}
+                            <tr>
+                                <td>
+                                    <div class="fw-bold text-dark">{{ c.nombre_negocio }}</div>
+                                    <small class="text-muted">{{ c.categoria }} | {{ c.usuario }}</small>
+                                </td>
+                                <td class="fw-bold text-success">${{ c.total_vendido }}</td>
+                                
+                                <td class="text-center">
+                                    <a href="/admin/toggle_vip/{{ c.id }}" class="toggle-active {{ 'on' if c.es_destacado else '' }}">
+                                        <i class="fas fa-crown fs-5"></i>
+                                    </a>
+                                </td>
+                                
+                                <td class="text-center">
+                                    <a href="/admin/toggle_verificado/{{ c.id }}" class="toggle-active toggle-verified {{ 'on' if c.es_verificado else '' }}">
+                                        <i class="fas fa-check-circle fs-5"></i>
+                                    </a>
+                                </td>
+
+                                <td class="text-end">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <a href="/mi_negocio" class="action-btn bg-light text-dark" title="Ver como Dueño (Beta)" target="_blank"><i class="fas fa-eye"></i></a>
+                                        
+                                        {% if c.estado == 'activo' %}
+                                            <a href="/admin/estado/{{ c.id }}/suspender" class="action-btn bg-warning bg-opacity-25 text-warning" title="Suspender"><i class="fas fa-pause"></i></a>
+                                        {% else %}
+                                            <a href="/admin/estado/{{ c.id }}/activar" class="action-btn bg-success bg-opacity-25 text-success" title="Reactivar"><i class="fas fa-play"></i></a>
+                                        {% endif %}
+                                        
+                                        <a href="/admin/eliminar_negocio/{{ c.id }}" class="action-btn bg-danger bg-opacity-10 text-danger" title="Eliminar Definitivamente" onclick="return confirm('⚠️ ¿ESTÁS SEGURO?\nEsto borrará el negocio, sus productos y ventas para siempre.')"><i class="fas fa-trash"></i></a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">Aún no hay negocios activos.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>

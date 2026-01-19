@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | {{ comercio.nombre_negocio }}</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root { --primary: #6366f1; --secondary: #8b5cf6; --success: #10b981; --dark: #0f172a; --bg: #f1f5f9; }
+        body { font-family: 'Outfit', sans-serif; background-color: var(--bg); color: var(--dark); padding-bottom: 80px; overflow-x: hidden; }
+        .navbar { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); padding: 15px 0; border-bottom: 1px solid #e2e8f0; z-index: 1000; }
+        .dash-header { background: linear-gradient(135deg, var(--dark) 0%, #1e293b 100%); color: white; padding: 50px 0; border-radius: 0 0 50px 50px; margin-bottom: 40px; position: relative; overflow: hidden; }
+        .stat-card { background: white; border: none; border-radius: 25px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); transition: 0.3s; position: relative; overflow: hidden; }
+        .product-item { background: white; border-radius: 20px; padding: 15px 20px; margin-bottom: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.03); transition: 0.3s; display: flex; align-items: center; justify-content: space-between; }
+        .product-img { width: 65px; height: 65px; border-radius: 15px; object-fit: cover; background: #f8fafc; }
+        .btn-action-sm { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; transition: 0.2s; border: none; }
+        .btn-action-sm:hover { transform: scale(1.15); }
+        .btn-sell { background: #d1fae5; color: #059669; }
+        .fab-main { position: fixed; bottom: 35px; right: 35px; width: 70px; height: 70px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 15px 35px rgba(99, 102, 241, 0.5); border: none; z-index: 1000; transition: 0.3s; }
+        .nav-pills .nav-link.active { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4); }
+        .table-history th { background: #f8fafc; padding: 20px; border: none; font-weight: 700; color: #64748b; }
+        .qty-display { font-size: 2rem; font-weight: 900; width: 80px; text-align: center; border: none; background: transparent; }
+        @media print { .no-print, .navbar, .fab-main { display: none !important; } }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar sticky-top animate__animated animate__fadeInDown no-print">
+        <div class="container">
+            <a href="/" class="text-decoration-none text-dark fw-bold"><i class="fas fa-arrow-left me-2"></i>Volver al Inicio</a>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-white text-dark border shadow-sm d-none d-md-block py-2 px-3 rounded-pill fw-bold"><i class="fas fa-user-circle me-2 text-primary"></i>{{ comercio.usuario }}</span>
+                <a href="/logout" class="btn btn-danger rounded-pill px-4 fw-bold">Salir</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dash-header" data-aos="fade-down">
+        <div class="container position-relative z-1">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <span class="badge bg-primary bg-opacity-25 text-white border border-white border-opacity-25 mb-3 px-3 py-2 rounded-pill fw-bold">Panel de Control</span>
+                    <h1 class="fw-900 display-4 mb-2">{{ comercio.nombre_negocio }}</h1>
+                    <p class="opacity-90 mb-4 fs-5"><i class="fas fa-map-pin me-2 text-warning"></i> {{ comercio.direccion }}</p>
+                    <div class="d-flex gap-3">
+                        <a href="/comercio/{{ comercio.id }}" target="_blank" class="btn btn-light btn-lg rounded-pill fw-bold px-5 shadow-sm">Ver Tienda</a>
+                        <button class="btn btn-outline-light btn-lg rounded-pill fw-bold px-4" data-bs-toggle="modal" data-bs-target="#configModal"><i class="fas fa-cog me-2"></i> Configurar</button>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 text-end d-none d-md-block no-print">
+                    <div class="bg-white bg-opacity-10 rounded-4 p-4 d-inline-block text-start border border-white border-opacity-10 shadow-lg backdrop-blur">
+                        <small class="text-white-50 fw-bold ls-1 text-uppercase">ESTADO DE LA TIENDA</small>
+                        <div class="d-flex align-items-center gap-3 mt-2">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="estadoSwitch" style="width: 3.5em; height: 1.75em; cursor: pointer;" 
+                                       {% if comercio.estado_abierto %}checked{% endif %} onchange="cambiarEstado()">
+                            </div>
+                            <h2 class="m-0 fw-bold text-white" id="estadoTexto">
+                                {% if comercio.estado_abierto %}Abierto{% else %}Cerrado{% endif %}
+                            </h2>
+                        </div>
+                        <small class="text-white-50" id="estadoSub">
+                            {% if comercio.estado_abierto %}Recibiendo pedidos{% else %}Tienda pausada{% endif %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <ul class="nav nav-pills mb-5 no-print" id="pills-tab" role="tablist" data-aos="fade-up">
+            <li class="nav-item"><button class="nav-link active" id="pills-resumen-tab" data-bs-toggle="pill" data-bs-target="#pills-resumen"><i class="fas fa-chart-pie me-2"></i>Resumen</button></li>
+            <li class="nav-item"><button class="nav-link" id="pills-productos-tab" data-bs-toggle="pill" data-bs-target="#pills-productos"><i class="fas fa-boxes me-2"></i>Inventario & Ventas</button></li>
+            <li class="nav-item"><button class="nav-link" id="pills-historial-tab" data-bs-toggle="pill" data-bs-target="#pills-historial"><i class="fas fa-history me-2"></i>Historial</button></li>
+        </ul>
+
+        <div class="tab-content" id="pills-tabContent">
+            <div class="tab-pane fade show active" id="pills-resumen">
+                {% set total_stock = namespace(value=0) %}
+                {% set total_valor = namespace(value=0) %}
+                {% for p in productos %}
+                    {% set total_stock.value = total_stock.value + p.stock %}
+                    {% set total_valor.value = total_valor.value + (p.precio * p.stock) %}
+                {% endfor %}
+
+                <div class="row g-4 mb-5">
+                    <div class="col-md-4" data-aos="zoom-in-up" data-aos-delay="100">
+                        <div class="stat-card border-start border-success border-4">
+                            <h6 class="text-dark fw-bold text-uppercase small mb-3">Ingresos Reales</h6>
+                            <h2 class="fw-900 m-0 text-success display-4">${{ total_vendido }}</h2>
+                        </div>
+                    </div>
+                    <div class="col-md-4" data-aos="zoom-in-up" data-aos-delay="200">
+                        <div class="stat-card">
+                            <h6 class="text-dark fw-bold text-uppercase small mb-3">Valor en Mercadería</h6>
+                            <h2 class="fw-900 m-0 text-primary display-4">${{ total_valor.value }}</h2>
+                        </div>
+                    </div>
+                    <div class="col-md-4" data-aos="zoom-in-up" data-aos-delay="300">
+                        <div class="stat-card">
+                            <h6 class="text-dark fw-bold text-uppercase small mb-3">Stock Total</h6>
+                            <h2 class="fw-900 m-0 text-info display-4">{{ total_stock.value }}</h2>
+                        </div>
+                    </div>
+                </div>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} rounded-4 text-center shadow-sm mb-5 border-0 animate__animated animate__bounceIn">
+                                <i class="fas fa-info-circle me-2"></i> {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                <div class="stat-card p-4" data-aos="fade-up">
+                    <h5 class="fw-bold mb-4">📈 Niveles de Stock</h5>
+                    <canvas id="stockChart" style="max-height: 350px;"></canvas>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="pills-productos">
+                <div class="d-flex justify-content-between align-items-center mb-5" data-aos="fade-down">
+                    <h4 class="fw-bold m-0">Gestión de Inventario</h4>
+                    <input type="text" id="searchInput" class="form-control w-auto border-0 shadow-sm rounded-pill ps-4" placeholder="Buscar..." onkeyup="filterProducts()">
+                </div>
+
+                {% if productos %}
+                <div id="productList">
+                    {% for p in productos %}
+                    <div class="product-item" data-aos="fade-up">
+                        <div class="d-flex align-items-center gap-4">
+                            {% if p.imagen_url %}<img src="{{ p.imagen_url }}" class="product-img shadow-sm">{% else %}<div class="product-img d-flex align-items-center justify-content-center text-muted bg-light"><i class="fas fa-image"></i></div>{% endif %}
+                            <div>
+                                <h5 class="fw-bold m-0 product-name">{{ p.nombre_producto }}</h5>
+                                <div class="d-flex align-items-center gap-3 mt-1">
+                                    <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 fw-bold">${{ p.precio }}</span>
+                                    <small class="text-muted fw-bold">Stock: {{ p.stock }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <button class="btn-action-sm btn-sell shadow-sm" data-bs-toggle="modal" data-bs-target="#venderModal{{ p.id }}"><i class="fas fa-dollar-sign fs-5"></i></button>
+                            <div class="vr mx-2 text-muted opacity-25"></div>
+                            <button class="btn-action-sm btn-light text-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#editarModal{{ p.id }}"><i class="fas fa-pen"></i></button>
+                            <a href="/mi_negocio/borrar/{{ p.id }}" class="btn-action-sm btn-light text-danger shadow-sm" onclick="return confirm('¿Eliminar?')"><i class="fas fa-trash"></i></a>
+                        </div>
+                    </div>
+
+                    <div class="modal fade" id="venderModal{{ p.id }}" tabindex="-1">
+                        <div class="modal-dialog modal-dialog-centered modal-sm">
+                            <div class="modal-content rounded-5 border-0 shadow-lg">
+                                <div class="modal-header bg-success text-white border-0 justify-content-center py-3"><h5 class="fw-900 m-0">Registrar Venta</h5></div>
+                                <div class="modal-body p-4 text-center bg-light">
+                                    <p class="text-muted mb-1">{{ p.nombre_producto }}</p>
+                                    <h2 class="fw-900 text-success mb-4">$<span id="totalDisplay{{ p.id }}">{{ p.precio }}</span></h2>
+                                    <form action="/mi_negocio/vender" method="POST">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="id_producto" value="{{ p.id }}">
+                                        <div class="d-flex align-items-center justify-content-center gap-3 mb-4">
+                                            <button type="button" class="qty-btn bg-white shadow-sm text-danger" onclick="updateQty({{ p.id }}, -1, {{ p.precio }})">-</button>
+                                            <input type="number" name="cantidad" id="qtyInput{{ p.id }}" class="qty-display" value="1" readonly>
+                                            <button type="button" class="qty-btn bg-white shadow-sm text-success" onclick="updateQty({{ p.id }}, 1, {{ p.precio }})">+</button>
+                                        </div>
+                                        <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold py-3 fs-5 shadow">Confirmar</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal fade" id="editarModal{{ p.id }}" tabindex="-1">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content rounded-5 border-0 p-4">
+                                <h5 class="fw-bold mb-4">Editar Producto</h5>
+                                <form action="/mi_negocio/editar/{{ p.id }}" method="POST" enctype="multipart/form-data">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <input type="text" name="nombre" class="form-control rounded-4 mb-3" value="{{ p.nombre_producto }}" required>
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-6"><input type="number" name="precio" class="form-control rounded-4" value="{{ p.precio }}" required></div>
+                                        <div class="col-6"><input type="number" name="stock" class="form-control rounded-4" value="{{ p.stock }}" required></div>
+                                    </div>
+                                    <input type="file" name="foto" class="form-control rounded-4 mb-4">
+                                    <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold py-2">Guardar</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                    <div class="text-center py-5"><i class="fas fa-box-open fa-3x opacity-25"></i><p>Sin inventario.</p></div>
+                {% endif %}
+            </div>
+
+            <div class="tab-pane fade" id="pills-historial">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold m-0 text-secondary">Historial de Ventas</h4>
+                    <a href="/mi_negocio/reporte_mensual" target="_blank" class="btn btn-dark rounded-pill px-4 fw-bold no-print"><i class="fas fa-print me-2"></i> Imprimir Mes</a>
+                </div>
+                {% if ventas %}
+                <div class="table-responsive table-history">
+                    <table class="table mb-0">
+                        <thead><tr><th>Fecha</th><th>Producto</th><th class="text-center">Cant.</th><th class="text-end">Total</th></tr></thead>
+                        <tbody>
+                            {% for v in ventas %}
+                            <tr>
+                                <td class="text-muted small">{{ v.fecha }}</td>
+                                <td class="fw-bold">{{ v.nombre_producto if v.nombre_producto else 'Producto Borrado' }}</td>
+                                <td class="text-center"><span class="badge bg-light text-dark rounded-pill border">{{ v.cantidad }}</span></td>
+                                <td class="text-end fw-bold text-success">+${{ v.total_venta }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5 bg-white rounded-5 shadow-sm"><i class="fas fa-history fa-3x text-muted opacity-25 mb-3"></i><h5>Aún no hay ventas registradas</h5></div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <button class="fab-main animate__animated animate__bounceInUp no-print" data-bs-toggle="modal" data-bs-target="#nuevoModal"><i class="fas fa-plus"></i></button>
+
+    <div class="modal fade" id="nuevoModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-5 border-0 p-4 bg-primary text-white" style="background: linear-gradient(135deg, var(--primary), var(--secondary));">
+                <div class="d-flex justify-content-between mb-4"><h4 class="fw-900 m-0">Nuevo Producto</h4><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+                <form action="/mi_negocio/nuevo" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="text" name="nombre" class="form-control rounded-4 border-0 mb-3" placeholder="Nombre" required>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6"><input type="number" name="precio" class="form-control rounded-4 border-0" placeholder="Price $" required></div>
+                        <div class="col-6"><input type="number" name="stock" class="form-control rounded-4 border-0" value="10" required></div>
+                    </div>
+                    <input type="file" name="foto" class="form-control rounded-4 border-0 mb-4">
+                    <button type="submit" class="btn btn-warning w-100 rounded-pill fw-900 py-3 shadow text-dark">Crear</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="configModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-5 border-0 p-4">
+                <div class="d-flex justify-content-between mb-4">
+                    <h5 class="fw-bold m-0"><i class="fas fa-store me-2"></i>Editar Perfil</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="/mi_negocio/editar_perfil" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="mb-3">
+                        <label class="small fw-bold text-muted">Dirección</label>
+                        <input type="text" name="direccion" class="form-control rounded-4" value="{{ comercio.direccion }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="small fw-bold text-muted">Teléfono</label>
+                        <input type="text" name="telefono" class="form-control rounded-4" value="{{ comercio.telefono }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="small fw-bold text-muted">Días y Horarios</label>
+                        <input type="text" name="horarios" class="form-control rounded-4" value="{{ comercio.horarios }}" placeholder="Ej: Lun-Vie 9-13hs">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="small fw-bold text-muted">Cambiar Logo</label>
+                        <input type="file" name="logo" class="form-control rounded-4">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold py-3">Actualizar Datos</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({ duration: 800, once: true });
+        
+        function updateQty(id, change, price) {
+            let input = document.getElementById('qtyInput' + id);
+            let totalDisplay = document.getElementById('totalDisplay' + id);
+            let currentQty = parseInt(input.value);
+            let newQty = currentQty + change;
+            if (newQty < 1) newQty = 1;
+            input.value = newQty;
+            totalDisplay.innerText = (newQty * price).toFixed(0);
+        }
+        
+        function filterProducts() {
+            var input = document.getElementById("searchInput").value.toUpperCase();
+            var items = document.getElementsByClassName("product-item");
+            for (var i = 0; i < items.length; i++) {
+                var name = items[i].getElementsByClassName("product-name")[0];
+                if (name.innerText.toUpperCase().indexOf(input) > -1) items[i].style.display = ""; else items[i].style.display = "none";
+            }
+        }
+
+        function cambiarEstado() {
+            fetch('/mi_negocio/cambiar_estado', {
+                method: 'POST',
+                headers: {'X-CSRFToken': '{{ csrf_token() }}'}
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    const texto = document.getElementById('estadoTexto');
+                    const sub = document.getElementById('estadoSub');
+                    if(data.nuevo_estado) {
+                        texto.innerText = "Abierto"; sub.innerText = "Recibiendo pedidos";
+                    } else {
+                        texto.innerText = "Cerrado"; sub.innerText = "Tienda pausada";
+                    }
+                } else { alert("Error al cambiar estado"); }
+            });
+        }
+
+        const ctx = document.getElementById('stockChart');
+        if (ctx) {
+            const productLabels = [{% for p in productos %}"{{ p.nombre_producto | truncate(10) }}",{% endfor %}];
+            const productStock = [{% for p in productos %}{{ p.stock }},{% endfor %}];
+            new Chart(ctx, {
+                type: 'bar',
+                data: { labels: productLabels, datasets: [{ label: 'Stock', data: productStock, backgroundColor: '#6366f1', borderRadius: 5 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        }
+    </script>
+</body>
+</html>
