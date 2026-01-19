@@ -461,7 +461,7 @@ def reporte_mensual():
         SELECT v.*, p.nombre_producto 
         FROM ventas v 
         LEFT JOIN productos p ON v.producto_id = p.id 
-        WHERE v.comercio_id = %s AND strftime('%Y-%m', v.fecha) = %s
+        WHERE v.comercio_id = %s AND TO_CHAR(v.fecha, 'YYYY-MM') = %s
         ORDER BY v.fecha DESC
     """, (id_comercio, mes_actual_str))
     
