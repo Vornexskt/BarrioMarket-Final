@@ -184,6 +184,16 @@
                 <span><i class="fas fa-map-marker-alt me-1 text-warning"></i> {{ comercio.direccion }}</span>
                 {% if comercio.horarios %}<span><i class="fas fa-clock me-1 text-info"></i> {{ comercio.horarios }}</span>{% endif %}
             </div>
+            <div style="text-align: center; margin-top: 15px; padding-bottom: 10px;">
+					<p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; margin-bottom: 8px;">
+						<i class="fas fa-qrcode"></i> Escanea para compartir
+					</p>
+					<div style="background: white; padding: 5px; display: inline-block; border-radius: 8px;">
+						<img src="{{ url_for('generar_qr', id_comercio=comercio.id) }}" 
+							 alt="QR del Negocio" 
+							 style="width: 120px; height: 120px; display: block;">
+					</div>
+				</div>
         </div>
     </header>
 
