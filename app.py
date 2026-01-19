@@ -125,7 +125,7 @@ inicializar_tabla_sugerencias()
 #  RUTAS PÚBLICAS (CLIENTES)
 # ==========================================
 # Cambia esto a True para activar el mantenimiento
-MANTENIMIENTO = False
+MANTENIMIENTO = True
 
 @app.before_request
 def check_mantenimiento():
