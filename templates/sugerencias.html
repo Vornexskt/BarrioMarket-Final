@@ -26,6 +26,9 @@
                     </div>
 
                     <form action="/sugerencias" method="POST">
+                        
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        
                         <div class="mb-3">
                             <textarea name="mensaje" class="form-control bg-dark text-white border-secondary" 
                                       rows="5" placeholder="Escribe tu idea aquí..." required></textarea>

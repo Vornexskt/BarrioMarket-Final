@@ -73,7 +73,6 @@ google = oauth.register(
 )
 
 # --- INICIALIZACIÓN DE TABLA DE SUGERENCIAS ---
-# Pegar esto justo debajo de 'def get_db_connection():'
 def inicializar_tabla_sugerencias():
     try:
         conn = get_db_connection()
@@ -125,7 +124,7 @@ inicializar_tabla_sugerencias()
 #  RUTAS PÚBLICAS (CLIENTES)
 # ==========================================
 # Cambia esto a True para activar el mantenimiento
-MANTENIMIENTO = True
+MANTENIMIENTO = False
 
 @app.before_request
 def check_mantenimiento():
@@ -149,8 +148,7 @@ def ver_comercio(id_comercio):
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # 1. SUMAR VISITA (¡Nuevo!)
-    # Se ejecuta antes de cargar nada más
+    # 1. SUMAR VISITA
     cursor.execute("UPDATE comercios SET visitas = visitas + 1 WHERE id = %s", (id_comercio,))
     conn.commit()
 
@@ -170,7 +168,7 @@ def ver_comercio(id_comercio):
     cursor.execute("SELECT * FROM productos WHERE comercio_id = %s", (id_comercio,))
     productos = cursor.fetchall()
 
-    # 4. OBTENER RESEÑAS (Mantenemos tu código actual)
+    # 4. OBTENER RESEÑAS
     cursor.execute("SELECT * FROM resenas WHERE comercio_id = %s ORDER BY id DESC", (id_comercio,))
     resenas = cursor.fetchall()
     
@@ -178,7 +176,7 @@ def ver_comercio(id_comercio):
     if len(resenas) > 0:
         promedio = round(sum(r['puntaje'] for r in resenas) / len(resenas), 1)
 
-    # 5. VERIFICAR FAVORITO (¡Nuevo!)
+    # 5. VERIFICAR FAVORITO
     es_favorito = False
     if 'user_id' in session:
         cursor.execute("SELECT * FROM favoritos WHERE usuario_id = %s AND comercio_id = %s", 
@@ -188,7 +186,6 @@ def ver_comercio(id_comercio):
 
     conn.close()
     
-    # Enviamos todo al HTML: comercio, productos, reseñas, promedio Y el nuevo 'es_favorito'
     return render_template('detalle.html', 
                            comercio=comercio, 
                            productos=productos, 
@@ -217,7 +214,7 @@ def login():
             return redirect(url_for('admin_panel'))
         
         conn = get_db_connection(); cursor = conn.cursor()
-        # Buscamos el usuario PRIMERO, sin chequear contraseña en la SQL
+        # Buscamos el usuario PRIMERO
         cursor.execute("""
             SELECT * FROM comercios 
             WHERE (usuario = %s OR email = %s OR telefono = %s)
@@ -227,15 +224,15 @@ def login():
         conn.close()
 
         if comercio:
-            # VERIFICACIÓN DE SEGURIDAD HÍBRIDA (Soporta claves viejas y nuevas)
+            # VERIFICACIÓN DE SEGURIDAD HÍBRIDA
             password_valida = False
             
-            # 1. Intenta verificar como Hash (Nueva seguridad)
+            # 1. Intenta verificar como Hash
             try:
                 if check_password_hash(comercio['password'], password):
                     password_valida = True
             except:
-                pass # No era un hash, probamos texto plano
+                pass 
             
             # 2. Si falla, intenta texto plano (Usuarios viejos)
             if not password_valida and comercio['password'] == password:
@@ -248,7 +245,7 @@ def login():
                 session['rol'] = 'dueno'
                 session['user_id'] = comercio['id']
                 session['nombre_negocio'] = comercio['nombre_negocio']
-                session.permanent = True # Sesión persistente segura
+                session.permanent = True 
                 return redirect(url_for('dashboard_dueno'))
         
         return render_template('login.html', error="❌ Credenciales incorrectas")
@@ -407,9 +404,10 @@ def registrar_venta_manual():
         conn = get_db_connection()
         cursor = conn.cursor()
 
+        # CORRECCIÓN AQUÍ: USAR SERIAL EN LUGAR DE AUTOINCREMENT PARA POSTGRESQL
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS ventas (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 comercio_id INTEGER NOT NULL,
                 producto_id INTEGER NOT NULL,
                 cantidad INTEGER NOT NULL,
