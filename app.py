@@ -75,6 +75,15 @@ google = oauth.register(
 # ==========================================
 #  RUTAS PÚBLICAS (CLIENTES)
 # ==========================================
+# Cambia esto a True para activar el mantenimiento
+MANTENIMIENTO = True
+
+@app.before_request
+def check_mantenimiento():
+    if MANTENIMIENTO and request.path != '/static/uploads/tu_logo.png':
+        # Permite ver el logo pero bloquea todo lo demás
+        return render_template('mantenimiento.html')
+
 
 @app.route('/')
 def pagina_principal():
