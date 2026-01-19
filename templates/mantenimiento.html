@@ -4,28 +4,57 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mantenimiento - Barrio Market</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
+        :root {
+            --color-fondo: #0a0a0a;
+            --color-texto: #ffffff;
+            --color-acento: #f1c40f; /* Amarillo de tu marca */
+        }
+
         body {
-            background-color: #0a0a0a;
+            background-color: var(--color-fondo);
             margin: 0;
             overflow: hidden;
             height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Arial Black', sans-serif;
+            font-family: 'Montserrat', sans-serif;
             position: relative;
         }
 
-        /* TEXTO DIAGONAL AUTOMÁTICO */
+        /* --- ANIMACIONES DE FONDO --- */
+        .background-animation {
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-linear-gradient(
+                -45deg,
+                rgba(255, 255, 255, 0.03) 0px,
+                rgba(255, 255, 255, 0.03) 1px,
+                transparent 1px,
+                transparent 50px
+            );
+            z-index: 0;
+            animation: backgroundScroll 60s linear infinite;
+            pointer-events: none;
+        }
+
         body::before {
-            content: "BARRIO MARKET BARRIO MARKET BARRIO MARKET BARRIO MARKET BARRIO MARKET BARRIO MARKET";
+            content: "BARRIO MARKET BARRIO MARKET BARRIO MARKET BARRIO MARKET";
             position: absolute;
             width: 200%;
             height: 200%;
             top: -50%;
             left: -50%;
-            font-size: 6rem;
+            font-size: 8rem;
             font-weight: 900;
             color: rgba(255, 255, 255, 0.02);
             transform: rotate(-25deg);
@@ -33,60 +62,101 @@
             display: flex;
             flex-wrap: wrap;
             line-height: 1;
+            justify-content: center;
+            align-items: center;
             pointer-events: none;
+            animation: textPulse 10s ease-in-out infinite alternate;
         }
 
+
+        /* --- TARJETA CENTRAL --- */
         .card-mantenimiento {
             position: relative;
             z-index: 1;
-            background: rgba(20, 20, 20, 0.8);
-            backdrop-filter: blur(15px);
-            padding: 60px;
+            background: rgba(20, 20, 20, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 60px 40px;
             border-radius: 30px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             text-align: center;
             max-width: 500px;
+            width: 90%;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+            animation: cardEntrance 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            opacity: 0;
+            transform: translateY(30px) scale(0.95);
         }
 
-        /* EL LOGO QUE YA ESTÁ EN TU SERVIDOR */
-        .logo-mante {
-            width: 160px;
-            margin-bottom: 20px;
+        /* ÍCONO DEL MERCADO (Reemplaza al logo) */
+        .logo-icono {
+            font-size: 5rem;
+            color: var(--color-acento); /* Amarillo */
+            margin-bottom: 25px;
+            /* Una sombra suave amarilla para que resalte */
+            filter: drop-shadow(0 4px 10px rgba(241, 196, 15, 0.3));
         }
 
-        h1 {
-            color: #ffffff;
-            font-size: 2.5rem;
-            margin: 0;
+        /* TEXTOS */
+        .aviso {
+            color: var(--color-acento);
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            margin-bottom: 15px;
+            display: block;
             text-transform: uppercase;
         }
 
-        .aviso {
-            color: #f1c40f; /* El amarillo de tu logo */
-            font-size: 0.9rem;
-            font-weight: bold;
-            letter-spacing: 2px;
-            margin-bottom: 25px;
-            display: block;
+        h1 {
+            color: var(--color-texto);
+            font-size: 3rem;
+            margin: 0 0 20px 0;
+            text-transform: uppercase;
+            font-weight: 900;
+            letter-spacing: -1px;
+            line-height: 1.1;
         }
 
         p {
-            color: #aaaaaa;
-            font-family: 'Segoe UI', sans-serif;
-            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        /* --- KEYFRAMES PARA ANIMACIONES --- */
+        @keyframes backgroundScroll {
+            0% { transform: translate(0, 0) rotate(-45deg); }
+            100% { transform: translate(50px, 50px) rotate(-45deg); }
+        }
+
+        @keyframes textPulse {
+            0% { opacity: 0.02; transform: rotate(-25deg) scale(1); }
+            100% { opacity: 0.035; transform: rotate(-25deg) scale(1.02); }
+        }
+
+        @keyframes cardEntrance {
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
     </style>
 </head>
 <body>
 
+    <div class="background-animation"></div>
+
     <div class="card-mantenimiento">
-        <img src="/static/uploads/tu_logo.png" alt="Logo" class="logo-mante">
         
-        <span class="aviso">SITIO EN MANTENIMIENTO</span>
+        <i class="fas fa-store logo-icono"></i>
         
-        <h1>BARRIO MARKET</h1>
+        <span class="aviso">Sitio en Mantenimiento</span>
         
-        <p>Estamos trabajando en nuevas funciones para el barrio. <br> Volvemos en unos minutos.</p>
+        <h1>Barrio Market</h1>
+        
+        <p>Estamos realizando ajustes para mejorar tu experiencia.<br>Volveremos muy pronto.</p>
     </div>
 
 </body>

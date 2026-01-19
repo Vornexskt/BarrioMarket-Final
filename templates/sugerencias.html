@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sugerencias - Barrio Market</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/dist/css/all.min.css">
+    <style>
+        body { background-color: #121212; color: white; }
+        .card-custom { background-color: #1e1e1e; border: 1px solid #333; border-radius: 15px; }
+        .btn-yellow { background-color: #f1c40f; color: black; font-weight: bold; border: none; }
+        .btn-yellow:hover { background-color: #d4ac0d; }
+    </style>
+</head>
+<body class="d-flex align-items-center justify-content-center" style="min-height: 100vh;">
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card card-custom p-4 shadow-lg">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-lightbulb fa-3x text-warning mb-3"></i>
+                        <h2>Tu opinión importa</h2>
+                        <p class="text-white-50">Ayúdanos a mejorar Barrio Market. ¿Qué te gustaría ver en la página?</p>
+                    </div>
+
+                    <form action="/sugerencias" method="POST">
+                        <div class="mb-3">
+                            <textarea name="mensaje" class="form-control bg-dark text-white border-secondary" 
+                                      rows="5" placeholder="Escribe tu idea aquí..." required></textarea>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-yellow btn-lg">Enviar Sugerencia</button>
+                            <a href="/" class="btn btn-outline-light">Volver al Inicio</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

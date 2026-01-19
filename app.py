@@ -72,6 +72,55 @@ google = oauth.register(
     client_kwargs={'scope': 'openid email profile'}
 )
 
+# --- INICIALIZACIÓN DE TABLA DE SUGERENCIAS ---
+# Pegar esto justo debajo de 'def get_db_connection():'
+def inicializar_tabla_sugerencias():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS sugerencias (
+                id SERIAL PRIMARY KEY,
+                mensaje TEXT NOT NULL,
+                fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+        conn.commit()
+        conn.close()
+        print("✅ Tabla de sugerencias verificada/creada.")
+    except Exception as e:
+        print(f"⚠️ Error verificando tabla sugerencias: {e}")
+
+# --- ACTUALIZAR DB (Favoritos y Visitas) ---
+def actualizar_db_mejoras():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # 1. Crear tabla de Favoritos si no existe
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS favoritos (
+            usuario_id INTEGER,
+            comercio_id INTEGER,
+            PRIMARY KEY (usuario_id, comercio_id)
+        );
+    """)
+    
+    # 2. Agregar columna 'visitas' a comercios (Usamos try por si ya existe)
+    try:
+        cursor.execute("ALTER TABLE comercios ADD COLUMN visitas INTEGER DEFAULT 0")
+    except:
+        pass # Si ya existe, no hace nada
+        
+    conn.commit()
+    conn.close()
+
+# Ejecutar la actualización al iniciar
+actualizar_db_mejoras()
+
+# Ejecutamos esto una vez al iniciar el script
+inicializar_tabla_sugerencias()
+# ----------------------------------------------
+
 # ==========================================
 #  RUTAS PÚBLICAS (CLIENTES)
 # ==========================================
@@ -97,28 +146,55 @@ def pagina_principal():
 
 @app.route('/comercio/<int:id_comercio>')
 def ver_comercio(id_comercio):
-    conn = get_db_connection(); cursor = conn.cursor()
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # 1. SUMAR VISITA (¡Nuevo!)
+    # Se ejecuta antes de cargar nada más
+    cursor.execute("UPDATE comercios SET visitas = visitas + 1 WHERE id = %s", (id_comercio,))
+    conn.commit()
+
+    # 2. OBTENER DATOS DEL COMERCIO
     cursor.execute("SELECT * FROM comercios WHERE id = %s", (id_comercio,))
     comercio = cursor.fetchone()
-    
-    if not comercio: return "Negocio no encontrado", 404
-    
-    # Si está pausado por ADMIN, nadie entra (salvo admin/dueño)
+
+    if not comercio:
+        return "Negocio no encontrado", 404
+
+    # Lógica de Admin/Dueño (Para no mostrar si está pausado)
     if comercio['estado'] != 'activo':
         if session.get('rol') not in ['admin', 'dueno']:
-            return render_template('login.html', error="⛔ Este negocio se encuentra pausado temporalmente.")
+             return render_template('login.html', error="Este negocio se encuentra pausado temporalmente.")
 
+    # 3. OBTENER PRODUCTOS
     cursor.execute("SELECT * FROM productos WHERE comercio_id = %s", (id_comercio,))
     productos = cursor.fetchall()
-    
+
+    # 4. OBTENER RESEÑAS (Mantenemos tu código actual)
     cursor.execute("SELECT * FROM resenas WHERE comercio_id = %s ORDER BY id DESC", (id_comercio,))
     resenas = cursor.fetchall()
     
     promedio = 0
-    if len(resenas) > 0: promedio = round(sum(r['puntaje'] for r in resenas) / len(resenas), 1)
-    
+    if len(resenas) > 0:
+        promedio = round(sum(r['puntaje'] for r in resenas) / len(resenas), 1)
+
+    # 5. VERIFICAR FAVORITO (¡Nuevo!)
+    es_favorito = False
+    if 'user_id' in session:
+        cursor.execute("SELECT * FROM favoritos WHERE usuario_id = %s AND comercio_id = %s", 
+                       (session['user_id'], id_comercio))
+        if cursor.fetchone():
+            es_favorito = True
+
     conn.close()
-    return render_template('detalle.html', comercio=comercio, productos=productos, resenas=resenas, promedio=promedio, total_resenas=len(resenas))
+    
+    # Enviamos todo al HTML: comercio, productos, reseñas, promedio Y el nuevo 'es_favorito'
+    return render_template('detalle.html', 
+                           comercio=comercio, 
+                           productos=productos, 
+                           resenas=resenas, 
+                           promedio=promedio,
+                           es_favorito=es_favorito)
 
 # --- NUEVA RUTA LEGAL ---
 @app.route('/terminos')
@@ -614,6 +690,56 @@ def agregar_resena(id_comercio):
 @app.route('/webhook', methods=['POST'])
 def recibir_mensaje():
     return jsonify({"status": "ignored", "info": "Bot system disabled"})
+
+# --- RUTA 1: PÚBLICA (Para enviar sugerencias) ---
+@app.route('/sugerencias', methods=['GET', 'POST'])
+def buzon_sugerencias():
+    if request.method == 'POST':
+        mensaje = request.form['mensaje']
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO sugerencias (mensaje) VALUES (%s)", (mensaje,))
+        conn.commit()
+        conn.close()
+        flash('¡Gracias por tu sugerencia! La tendremos en cuenta.', 'success')
+        return redirect(url_for('pagina_principal'))
+    
+    return render_template('sugerencias.html')
+
+# --- RUTA 2: ADMIN (Para que tú las leas) ---
+@app.route('/admin/sugerencias')
+# @login_required  <-- Descomenta esto si tienes decorador de login
+def ver_sugerencias():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM sugerencias ORDER BY fecha DESC")
+    sugerencias = cursor.fetchall()
+    conn.close()
+    return render_template('admin_sugerencias.html', sugerencias=sugerencias)
+
+@app.route('/favorito/<int:id_comercio>')
+def toggle_favorito(id_comercio):
+    if 'user_id' not in session:
+        return redirect(url_for('login')) # Si no está logueado, al login
+    
+    usuario_id = session['user_id']
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Verificamos si ya le dio like
+    cursor.execute("SELECT * FROM favoritos WHERE usuario_id = %s AND comercio_id = %s", (usuario_id, id_comercio))
+    existe = cursor.fetchone()
+    
+    if existe:
+        # Si existe, lo borramos (Ya no me gusta)
+        cursor.execute("DELETE FROM favoritos WHERE usuario_id = %s AND comercio_id = %s", (usuario_id, id_comercio))
+    else:
+        # Si no existe, lo agregamos (Me gusta)
+        cursor.execute("INSERT INTO favoritos (usuario_id, comercio_id) VALUES (%s, %s)", (usuario_id, id_comercio))
+    
+    conn.commit()
+    conn.close()
+    return redirect(request.referrer) # Vuelve a la página donde estaba
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

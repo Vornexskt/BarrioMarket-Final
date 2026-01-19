@@ -184,13 +184,26 @@
                 <span><i class="fas fa-map-marker-alt me-1 text-warning"></i> {{ comercio.direccion }}</span>
                 {% if comercio.horarios %}<span><i class="fas fa-clock me-1 text-info"></i> {{ comercio.horarios }}</span>{% endif %}
             </div>
-                <div style="text-align: center; margin-top: 15px; padding-bottom: 15px;">
+            <div class="d-flex justify-content-center gap-3 mt-3 mb-4 flex-wrap">
+					
+					<a href="https://wa.me/?text=¡Mirá este negocio en Barrio Market! {{ request.url }}" 
+					   target="_blank" 
+					   class="btn btn-success rounded-pill px-4 fw-bold shadow-sm">
+						<i class="fab fa-whatsapp me-2"></i> Compartir
+					</a>
+
 					<a href="{{ url_for('generar_qr', id_comercio=comercio.id) }}" 
 					   target="_blank" 
-					   class="btn btn-outline-light btn-sm rounded-pill px-4"
-					   style="border-color: rgba(255,255,255,0.3);">
-						<i class="fas fa-qrcode me-2"></i> Ver código QR
+					   class="btn btn-outline-light rounded-pill px-4 fw-bold">
+						<i class="fas fa-qrcode me-2"></i> QR
 					</a>
+
+					<a href="/favorito/{{ comercio.id }}" 
+					   class="btn rounded-pill px-4 fw-bold shadow-sm {{ 'btn-danger' if es_favorito else 'btn-outline-danger' }}">
+						<i class="{{ 'fas' if es_favorito else 'far' }} fa-heart me-2"></i> 
+						{{ 'Te Gusta' if es_favorito else 'Me Gusta' }}
+					</a>
+
 				</div>
 				</div>
         </div>
