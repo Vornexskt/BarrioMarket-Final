@@ -350,10 +350,17 @@ def dashboard_dueno():
     datos_comercio = cursor.fetchone()
     
     try:
-        cursor.execute("SELECT SUM(total_venta) FROM ventas WHERE comercio_id = %s", (id_comercio,))
-        resultado_ventas = cursor.fetchone()[0]
-        total_vendido = round(resultado_ventas, 2) if resultado_ventas else 0
+        # CORRECCIÓN AQUÍ: Usamos 'AS total' para ponerle nombre y lo leemos como diccionario ['total']
+        # Esto funciona bien tanto en SQLite como en PostgreSQL
+        cursor.execute("""
+            SELECT COALESCE(SUM(total_venta), 0) as total 
+            FROM ventas WHERE comercio_id = %s
+        """, (id_comercio,))
         
+        resultado = cursor.fetchone()
+        total_vendido = round(resultado['total'], 2) if resultado else 0
+        
+        # Traemos el historial
         cursor.execute("""
             SELECT v.*, p.nombre_producto 
             FROM ventas v 
@@ -363,7 +370,9 @@ def dashboard_dueno():
         """, (id_comercio,))
         historial_ventas = cursor.fetchall()
         
-    except:
+    except Exception as e:
+        # Imprimimos el error en la consola para saber qué pasa si vuelve a fallar
+        print(f"Error en Dashboard: {e}")
         total_vendido = 0
         historial_ventas = []
     
