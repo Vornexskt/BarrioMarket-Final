@@ -9,3 +9,4 @@ requests
 email-validator
 werkzeug
 psycopg2-binary
+cloudinary
